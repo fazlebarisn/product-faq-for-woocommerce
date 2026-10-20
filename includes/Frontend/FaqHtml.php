@@ -242,22 +242,17 @@ class FaqHtml{
             'post_status'    => 'publish',
             'posts_per_page' => 50,
             'fields'         => 'ids',
-            'meta_query'     => [
-                [
-                    'key'     => 'faq',
-                    'compare' => 'EXISTS',
-                ],
-            ],
         ];
 
         if ( $filter_term_id > 0 ) {
-            $query_args['tax_query'] = [
-                [
-                    'taxonomy' => 'product_cat',
-                    'field'    => 'term_id',
-                    'terms'    => $filter_term_id,
-                ],
-            ];
+            $term_object_ids = get_objects_in_term( $filter_term_id, 'product_cat' );
+            if ( empty( $term_object_ids ) || is_wp_error( $term_object_ids ) ) {
+                return [
+                    'source' => ! empty( $collected_faqs ) ? 'general_shortcode' : 'none',
+                    'faqs'   => $collected_faqs,
+                ];
+            }
+            $query_args['include'] = array_map( 'intval', $term_object_ids );
         }
 
         $product_ids = get_posts( $query_args );

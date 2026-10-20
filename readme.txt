@@ -16,6 +16,8 @@ Boost eCommerce conversions, address buyer objections, and rank on Google with A
 
 **Boost eCommerce conversions, eliminate pre-sale hesitation, and rank higher on Google Search with Product FAQ for WooCommerce.**
 
+[youtube https://www.youtube.com/watch?v=AIVfoBu8XRg]
+
 The **Product FAQ for WooCommerce** plugin enables you to easily add beautifully responsive, high-converting Frequently Asked Questions (FAQs) directly on your WooCommerce product pages. Whether you are selling physical goods, digital downloads, or services, this plugin provides your shoppers with clear answers before they even ask—slashing support tickets and driving instant sales.
 
 = 🌟 What Makes Version 1.5.1 Special? =
@@ -52,10 +54,6 @@ The **Product FAQ for WooCommerce** plugin enables you to easily add beautifully
    * `[woo_product_faq]` — On a Single Product template (auto-detects the product) OR on a standalone **FAQ Page** (automatically displays all Store/Bulk & Product FAQs).
    * `[woo_product_faq id="123" title="Custom Heading"]` — On any Page or Post to display FAQs for a specific WooCommerce Product ID (`123`).
    * `[woo_product_faq category="hoodies"]` — On any Page or Post to display FAQs for a specific Product Category (by slug or ID).
-
-= 🎬 Official Video Overview & Tutorial =
-
-[youtube https://www.youtube.com/watch?v=AIVfoBu8XRg]
 
 == Installation ==
 
