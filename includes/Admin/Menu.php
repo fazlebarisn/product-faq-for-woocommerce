@@ -196,7 +196,9 @@ class Menu{
                 <option value="after_summary" <?php echo esc_attr( $faq_position ) && $faq_position == 'after_summary' ? 'selected' : ''; ?> >After Summary</option>
                 <option value="after_single_product" <?php echo esc_attr( $faq_position ) && $faq_position == 'after_single_product' ? 'selected' : ''; ?> >After Single Product</option>
                 <option value="product_tab" <?php echo esc_attr( $faq_position ) && $faq_position == 'product_tab' ? 'selected' : ''; ?> >Product Tab</option>
+                <option value="shortcode" <?php echo esc_attr( $faq_position ) && $faq_position == 'shortcode' ? 'selected' : ''; ?> >Shortcode Only ([woo_product_faq])</option>
             </select>
+            <p class="description"><?php esc_html_e( 'Tip: Use [woo_product_faq] on Single Product templates or a general FAQ Page, [woo_product_faq id="123"] for a specific product ID, or [woo_product_faq category="slug"] for a category.', 'product-faq-for-woocommerce' ); ?></p>
         <?php
     }
 

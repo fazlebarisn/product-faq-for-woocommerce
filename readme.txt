@@ -6,7 +6,7 @@ Tested up to: 7.1
 WC requires at least: 5.0
 WC tested up to: 11.1.0
 Requires PHP: 7.3
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,17 +18,18 @@ Boost eCommerce conversions, address buyer objections, and rank on Google with A
 
 The **Product FAQ for WooCommerce** plugin enables you to easily add beautifully responsive, high-converting Frequently Asked Questions (FAQs) directly on your WooCommerce product pages. Whether you are selling physical goods, digital downloads, or services, this plugin provides your shoppers with clear answers before they even ask—slashing support tickets and driving instant sales.
 
-= 🌟 What Makes Version 1.5.0 Special? =
+= 🌟 What Makes Version 1.5.1 Special? =
 
 * **🤖 Built-in AI FAQ Assistant (BYOK)**: Generate high-converting, objection-busting FAQs tailored specifically to your product's title, description, and features in 1 click using **Google Gemini** (Gemini 3.6 Flash / Flash Latest) or **OpenAI** (GPT-4o mini / GPT-4o).
 * **🔍 Google FAQ Schema (JSON-LD)**: Automatically generate Schema.org `FAQPage` structured data on every product page. Help your store dominate Google search results with expandable rich snippet accordions!
 * **💡 1-Click Objection-Buster Templates**: Instant pre-written, eCommerce-tested templates for *Shipping & Delivery*, *Returns & Money-Back Guarantees*, *Warranty & Durability*, *Sizing & Compatibility*, and *Care & Maintenance*.
+* **🧩 Universal `[woo_product_faq]` Shortcode**: Use `[woo_product_faq]` on Single Product templates or standalone FAQ pages (to display all store FAQs), `[woo_product_faq id="123"]` on any page/post for a specific product, or `[woo_product_faq category="hoodies"]` for a specific category.
 * **⚡ Resilient AI Failover Engine**: Automatic multi-model fallback ensures 100% uptime with zero interruptions during provider server spikes.
 
 = ✨ Key Features =
 * **AI-Powered Generation**: Create custom FAQs in seconds with adjustable copywriting tones (Sales/Objection Buster, Friendly, Concise, Technical).
 * **SEO Boost with JSON-LD Schema**: Native Schema.org `FAQPage` markup injected automatically without requiring external SEO plugins.
-* **Flexible Display Positions**: Render your FAQ accordions inside WooCommerce **Product Tabs**, **After Cart Button**, **After Meta**, **After Summary**, or **After Single Product**.
+* **Flexible Display Positions & Shortcode**: Render your FAQ accordions inside WooCommerce **Product Tabs**, **After Cart Button**, **After Meta**, **After Summary**, **After Single Product**, or anywhere via the **`[woo_product_faq]` Shortcode**.
 * **Objection-Buster Templates**: 1-click dropdown to quickly insert essential customer-reassurance FAQs.
 * **Category & Bulk FAQ Management**: Create and assign FAQs globally or across entire product categories in bulk.
 * **Per-Product FAQ Customization**: Add unique FAQs to individual products from the WooCommerce Product Data edit panel.
@@ -47,8 +48,14 @@ The **Product FAQ for WooCommerce** plugin enables you to easily add beautifully
 1. **Individual Product**: Go to **Products ➔ All Products**, click **Edit** on any product, scroll down to the **Product Data** panel, and select the **FAQ** tab. Click **"✨ Generate with AI"**, pick a template, or add custom FAQs.
 2. **Bulk Category FAQs**: Navigate to **Product FAQ ➔ Bulk FAQ** on your WordPress admin menu to create questions that automatically apply to all products in selected categories.
 3. **Configure Settings**: Go to **Product FAQ ➔ Settings** to toggle Google SEO Schema, customize colors, set display positions, and configure your AI Assistant API keys.
+4. **Use Shortcode Anywhere**:
+   * `[woo_product_faq]` — On a Single Product template (auto-detects the product) OR on a standalone **FAQ Page** (automatically displays all Store/Bulk & Product FAQs).
+   * `[woo_product_faq id="123" title="Custom Heading"]` — On any Page or Post to display FAQs for a specific WooCommerce Product ID (`123`).
+   * `[woo_product_faq category="hoodies"]` — On any Page or Post to display FAQs for a specific Product Category (by slug or ID).
 
-**Video Tutorial**: https://www.youtube.com/watch?v=nHY8yj2fuE8
+= 🎬 Official Video Overview & Tutorial =
+
+[youtube https://www.youtube.com/watch?v=AIVfoBu8XRg]
 
 == Installation ==
 
@@ -75,6 +82,12 @@ The **Product FAQ for WooCommerce** plugin enables you to easily add beautifully
 
 
 == Changelog ==
+
+= 1.5.1 =
+* **New**: Universal `[woo_product_faq]` Shortcode — Display product FAQs anywhere inside Elementor, Divi, Bricks, Gutenberg, or custom landing pages using `[woo_product_faq]` or `[woo_product_faq id="123" title="Custom Title"]`, plus a new "Shortcode Only" position option in settings.
+* **New**: 3-Tier Category Hierarchy Resolution Engine — Automatically resolves FAQs with strict priority: Individual Product FAQs override Sub-Category FAQs, and Sub-Category FAQs override Main Category FAQs.
+* **Updated**: Official video overview and documentation embedded in plugin readme.
+* **Improved**: Enhanced WordPress Coding Standards (WPCS) and Plugin Check (PCP) compliance across all admin and frontend modules.
 
 = 1.5.0 =
 * **New**: Built-in AI FAQ Assistant integration supporting Google Gemini (Gemini 3.6 Flash / Flash Latest) and OpenAI (GPT-4o mini / GPT-4o) with Bring-Your-Own-Key (BYOK).

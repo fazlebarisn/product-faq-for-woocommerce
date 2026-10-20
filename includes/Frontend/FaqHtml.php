@@ -14,6 +14,9 @@ class FaqHtml{
         $product_faq_position = esc_attr( get_option('product_faq_position') );
 
         if('disable'== $product_faq) return;
+
+        // Register universal shortcode [woo_product_faq] for Page Builders (Elementor, Divi, Bricks, Gutenberg)
+        add_shortcode( 'woo_product_faq', [ $this, 'renderFaqShortcode' ] );
         
         if( 'after_cart_button' == $product_faq_position ){
             add_action( 'woocommerce_after_add_to_cart_form', [ $this, 'rendeFaqHtml'] );
@@ -182,15 +185,139 @@ class FaqHtml{
     }
 
     /**
-     * Render FAQ HTML on Single Product Page
+     * Resolve all store/category FAQs when [woo_product_faq] is placed on a general Page (non-product)
+     *
+     * @param string|int $category Optional category ID or slug filter.
+     * @return array Array with 'source' and 'faqs'
      */
-    public function rendeFaqHtml(){
-        if ( ! is_product() ) {
-            return;
+    public function get_store_general_faqs( $category = '' ) {
+        $collected_faqs = [];
+        $seen_questions = [];
+
+        $filter_term_id = 0;
+        if ( ! empty( $category ) ) {
+            if ( is_numeric( $category ) ) {
+                $filter_term_id = intval( $category );
+            } else {
+                $term_obj = get_term_by( 'slug', sanitize_text_field( $category ), 'product_cat' );
+                if ( ! $term_obj ) {
+                    $term_obj = get_term_by( 'name', sanitize_text_field( $category ), 'product_cat' );
+                }
+                if ( $term_obj && ! is_wp_error( $term_obj ) ) {
+                    $filter_term_id = (int) $term_obj->term_id;
+                }
+            }
         }
 
-        $product_id = get_the_ID();
-        $resolved = $this->get_product_resolved_faqs( $product_id );
+        // 1. Collect from Bulk / Global FAQ Groups
+        $global_groups = get_option( 'woo_afaq_global_groups', [] );
+        if ( ! empty( $global_groups ) && is_array( $global_groups ) ) {
+            foreach ( $global_groups as $group ) {
+                $archive_terms = array_map( 'intval', (array) ( $group['archive_terms'] ?? [] ) );
+                if ( $filter_term_id > 0 && ! in_array( $filter_term_id, $archive_terms, true ) ) {
+                    continue;
+                }
+
+                $group_faqs = $group['faqs'] ?? [];
+                if ( is_array( $group_faqs ) ) {
+                    foreach ( $group_faqs as $gf ) {
+                        $q = trim( (string) ( $gf['question'] ?? '' ) );
+                        $a = trim( (string) ( $gf['answer'] ?? '' ) );
+                        $q_key = strtolower( $q );
+                        if ( '' !== $q && '' !== $a && ! isset( $seen_questions[ $q_key ] ) ) {
+                            $seen_questions[ $q_key ] = true;
+                            $collected_faqs[] = [
+                                'question' => $q,
+                                'answer'   => $a,
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Also collect from published WooCommerce Products if needed
+        $query_args = [
+            'post_type'      => 'product',
+            'post_status'    => 'publish',
+            'posts_per_page' => 50,
+            'fields'         => 'ids',
+            'meta_query'     => [
+                [
+                    'key'     => 'faq',
+                    'compare' => 'EXISTS',
+                ],
+            ],
+        ];
+
+        if ( $filter_term_id > 0 ) {
+            $query_args['tax_query'] = [
+                [
+                    'taxonomy' => 'product_cat',
+                    'field'    => 'term_id',
+                    'terms'    => $filter_term_id,
+                ],
+            ];
+        }
+
+        $product_ids = get_posts( $query_args );
+        if ( ! empty( $product_ids ) ) {
+            foreach ( $product_ids as $pid ) {
+                $p_faqs = get_post_meta( $pid, 'faq', true );
+                if ( ! empty( $p_faqs['question'] ) && is_array( $p_faqs['question'] ) ) {
+                    foreach ( $p_faqs['question'] as $k => $q ) {
+                        $q = trim( (string) $q );
+                        $a = trim( (string) ( $p_faqs['answer'][ $k ] ?? '' ) );
+                        $q_key = strtolower( $q );
+                        if ( '' !== $q && '' !== $a && ! isset( $seen_questions[ $q_key ] ) ) {
+                            $seen_questions[ $q_key ] = true;
+                            $collected_faqs[] = [
+                                'question' => $q,
+                                'answer'   => $a,
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
+        return [
+            'source' => ! empty( $collected_faqs ) ? 'general_shortcode' : 'none',
+            'faqs'   => $collected_faqs,
+        ];
+    }
+
+    /**
+     * Render FAQ HTML on Single Product Page or via [woo_product_faq] Shortcode
+     *
+     * @param int|string $custom_product_id Optional custom product ID from shortcode.
+     * @param string     $custom_title      Optional custom heading override from shortcode.
+     * @param string     $category          Optional category ID or slug from shortcode.
+     * @param bool       $is_shortcode      Whether invoked via [woo_product_faq] shortcode.
+     */
+    public function rendeFaqHtml( $custom_product_id = 0, $custom_title = '', $category = '', $is_shortcode = false ){
+        $explicit_product_id = is_numeric( $custom_product_id ) && intval( $custom_product_id ) > 0 ? intval( $custom_product_id ) : 0;
+        $product_id          = $explicit_product_id;
+
+        if ( ! $product_id && empty( $category ) ) {
+            if ( ! $is_shortcode && ! is_product() ) {
+                return;
+            }
+            $current_id = get_the_ID();
+            if ( $current_id && 'product' === get_post_type( $current_id ) ) {
+                $product_id = $current_id;
+            }
+        }
+
+        if ( $product_id > 0 && 'product' === get_post_type( $product_id ) ) {
+            $resolved = $this->get_product_resolved_faqs( $product_id );
+        } elseif ( $is_shortcode ) {
+            // Shortcode placed on a general WordPress Page/Post (like /faq/) or filtered by category
+            $resolved   = $this->get_store_general_faqs( $category );
+            $product_id = get_the_ID() ? get_the_ID() : 0;
+        } else {
+            return;
+        }
 
         if ( empty( $resolved['faqs'] ) ) {
             return;
@@ -200,7 +327,7 @@ class FaqHtml{
         $source = $resolved['source'];
 
         // Styling
-        $faq_heading           = esc_attr( get_option( 'faq_heading' ) );
+        $faq_heading           = ! empty( $custom_title ) ? esc_attr( $custom_title ) : esc_attr( get_option( 'faq_heading' ) );
         $faq_heading_color     = esc_attr( get_option( 'faq_heading_color' ) );
         $faq_question_color    = esc_attr( get_option( 'faq_question_color' ) );
         $faq_ans_color         = esc_attr( get_option( 'faq_ans_color' ) );
@@ -212,7 +339,7 @@ class FaqHtml{
         $faq_question_style = 'color:' . $faq_question_color . ';' . 'font-size:' . $faq_question_font_size;
         $faq_ans_style      = 'color:' . $faq_ans_color . ';' . 'font-size:' . $faq_ans_font_size;
         ?>
-        <div class="container" data-faq-source="<?php echo esc_attr( $source ); ?>">
+        <div class="container woo-faq-container" data-faq-source="<?php echo esc_attr( $source ); ?>">
             <h2 style="<?php echo esc_attr( $faq_heading_style ); ?>">
                 <?php 
                 if ( ! empty( $faq_heading ) ) {
@@ -228,7 +355,7 @@ class FaqHtml{
             ?>
                 <div class="accordion">
                     <div class="accordion-item" data-faq-index="<?php echo esc_attr( $key ); ?>" data-source="<?php echo esc_attr( $source ); ?>">
-                        <button aria-expanded="false">
+                        <button type="button" aria-expanded="false">
                             <span class="accordion-title" style="<?php echo esc_attr( $faq_question_style ); ?>">
                                 <?php echo esc_html( $question ); ?>
                             </span>
@@ -285,9 +412,46 @@ class FaqHtml{
     }
 
     /**
+     * Universal Shortcode [woo_product_faq] for Elementor, Divi, Bricks, Gutenberg, and Custom Templates
+     * Usage: [woo_product_faq] or [woo_product_faq id="123" title="Product FAQs"]
+     *
+     * @param array $atts Shortcode attributes.
+     * @return string
+     */
+    public function renderFaqShortcode( $atts = [] ) {
+        $atts = shortcode_atts(
+            [
+                'id'         => 0,
+                'product_id' => 0,
+                'category'   => '',
+                'title'      => '',
+            ],
+            $atts,
+            'woo_product_faq'
+        );
+
+        $explicit_product_id = intval( $atts['id'] ) > 0 ? intval( $atts['id'] ) : intval( $atts['product_id'] );
+
+        ob_start();
+        $this->rendeFaqHtml(
+            $explicit_product_id,
+            sanitize_text_field( $atts['title'] ),
+            sanitize_text_field( $atts['category'] ),
+            true
+        );
+        return ob_get_clean();
+    }
+
+    /**
      * Render Schema.org FAQPage JSON-LD Structured Data for Google Rich Results
      */
     public function renderJsonLdSchema( $faqs, $product_id ) {
+        static $rendered_schema = [];
+
+        if ( isset( $rendered_schema[ $product_id ] ) ) {
+            return;
+        }
+
         if ( get_option( 'woo_faq_enable_schema', 'enable' ) === 'disable' ) {
             return;
         }
@@ -295,6 +459,8 @@ class FaqHtml{
         if ( empty( $faqs ) || ! is_array( $faqs ) ) {
             return;
         }
+
+        $rendered_schema[ $product_id ] = true;
 
         $schema_items = [];
         foreach ( $faqs as $faq ) {
