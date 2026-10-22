@@ -13,7 +13,145 @@ class AiEngine
     }
 
     /**
-     * Test connection to the selected AI provider
+     * Check if WordPress native AI Client (wp_ai_client_prompt) is available and ready for text generation.
+     *
+     * @return bool
+     */
+    public static function isAiReady()
+    {
+        if (!function_exists('wp_ai_client_prompt')) {
+            return false;
+        }
+
+        try {
+            $builder = wp_ai_client_prompt('Test');
+            if (function_exists('WordPress\\AI\\get_preferred_models_for_text_generation')) {
+                $models = \WordPress\AI\get_preferred_models_for_text_generation();
+                if (!empty($models)) {
+                    $builder = $builder->using_model_preference(...$models);
+                }
+            }
+            return (bool) $builder->is_supported_for_text_generation();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Retrieve status of all registered WordPress AI Provider Connectors (Settings -> Connectors).
+     *
+     * @return array
+     */
+    public static function getConnectorsStatus()
+    {
+        $providers = [];
+        $has_any_key = false;
+
+        if (function_exists('wp_get_connectors')) {
+            $all_connectors = (array) wp_get_connectors();
+            foreach ($all_connectors as $id => $data) {
+                if (!is_array($data) || ($data['type'] ?? '') !== 'ai_provider') {
+                    continue;
+                }
+
+                $auth = $data['authentication'] ?? [];
+                $setting_name  = $auth['setting_name'] ?? '';
+                $constant_name = $auth['constant_name'] ?? '';
+                $env_var_name  = $auth['env_var_name'] ?? '';
+
+                $has_key = false;
+                if (!empty($env_var_name) && getenv($env_var_name) !== false && getenv($env_var_name) !== '') {
+                    $has_key = true;
+                } elseif (!empty($constant_name) && defined($constant_name) && constant($constant_name) !== '') {
+                    $has_key = true;
+                } elseif (!empty($setting_name) && get_option($setting_name, '') !== '') {
+                    $has_key = true;
+                }
+
+                $plugin_active = true;
+                if (isset($data['plugin']['is_active']) && is_callable($data['plugin']['is_active'])) {
+                    try {
+                        $plugin_active = (bool) call_user_func($data['plugin']['is_active']);
+                    } catch (\Throwable $e) {
+                        $plugin_active = false;
+                    }
+                }
+
+                $is_connected = $has_key && $plugin_active;
+                if ($is_connected) {
+                    $has_any_key = true;
+                }
+
+                $providers[$id] = [
+                    'id'            => $id,
+                    'name'          => $data['name'] ?? ucfirst($id),
+                    'description'   => $data['description'] ?? '',
+                    'has_key'       => $has_key,
+                    'plugin_active' => $plugin_active,
+                    'is_connected'  => $is_connected,
+                ];
+            }
+        }
+
+        $is_ready = self::isAiReady();
+
+        return [
+            'is_ready'       => $is_ready,
+            'has_any_key'    => $has_any_key || $is_ready,
+            'connectors_url' => admin_url('options-connectors.php'),
+            'wp_ai_url'      => defined('WPAI_VERSION') ? admin_url('options-general.php?page=ai-wp-admin') : '',
+            'providers'      => $providers,
+        ];
+    }
+
+    /**
+     * Generate text using WordPress Core AI Client (wp_ai_client_prompt).
+     *
+     * @param string $prompt              User prompt content.
+     * @param string $system_instructions Optional system instruction.
+     * @param float  $temperature         Generation temperature.
+     * @return string|\WP_Error
+     */
+    public static function generateTextWithWpAi($prompt, $system_instructions = '', $temperature = 0.7)
+    {
+        if (!function_exists('wp_ai_client_prompt')) {
+            return new \WP_Error(
+                'wp_ai_unavailable',
+                __('WordPress AI Client API (wp_ai_client_prompt) is not available. Please use WordPress 7.0+ or activate the official WordPress AI plugin.', 'product-faq-for-woocommerce')
+            );
+        }
+
+        try {
+            $builder = wp_ai_client_prompt($prompt);
+
+            if (function_exists('WordPress\\AI\\get_preferred_models_for_text_generation')) {
+                $models = \WordPress\AI\get_preferred_models_for_text_generation();
+                if (!empty($models)) {
+                    $builder = $builder->using_model_preference(...$models);
+                }
+            }
+
+            if (!empty($system_instructions)) {
+                $builder = $builder->using_system_instruction($system_instructions);
+            }
+
+            $builder = $builder->using_temperature((float) $temperature);
+
+            if (!$builder->is_supported_for_text_generation()) {
+                return new \WP_Error(
+                    'wp_ai_not_configured',
+                    __('No connected AI provider found in WordPress Settings -> Connectors.', 'product-faq-for-woocommerce')
+                );
+            }
+
+            return $builder->generate_text();
+        } catch (\Throwable $e) {
+            return new \WP_Error('wp_ai_exception', $e->getMessage());
+        }
+    }
+
+    /**
+     * Test connection to the WordPress Default AI Client (Settings -> Connectors)
      */
     public function testAiConnection()
     {
@@ -23,61 +161,29 @@ class AiEngine
             wp_send_json_error(['message' => __('Permission denied.', 'product-faq-for-woocommerce')]);
         }
 
-        $provider = isset($_POST['provider']) ? sanitize_text_field(wp_unslash($_POST['provider'])) : 'gemini';
-        $api_key  = isset($_POST['api_key']) ? sanitize_text_field(wp_unslash($_POST['api_key'])) : '';
-
-        if (empty($api_key)) {
-            $api_key = get_option('woo_faq_ai_api_key', '');
-        }
-
-        if (empty($api_key)) {
-            wp_send_json_error(['message' => __('Please enter an API key first.', 'product-faq-for-woocommerce')]);
-        }
-
-        if ($provider === 'openai') {
-            // phpcs:ignore PluginCheck.CodeAnalysis.AIProvider.DirectIntegration
-            $response = wp_remote_get('https://api.openai.com/v1/models', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $api_key
-                ],
-                'timeout' => 15
+        if (!self::isAiReady()) {
+            wp_send_json_error([
+                'message' => __('No active AI provider is connected in WordPress. Please go to Settings -> Connectors to connect Google Gemini, OpenAI, or Anthropic.', 'product-faq-for-woocommerce')
             ]);
-
-            if (is_wp_error($response)) {
-                wp_send_json_error(['message' => $response->get_error_message()]);
-            }
-
-            $code = wp_remote_retrieve_response_code($response);
-            if ($code !== 200) {
-                $body = json_decode(wp_remote_retrieve_body($response), true);
-                $err = $body['error']['message'] ?? __('Invalid OpenAI API Key or unauthorized request.', 'product-faq-for-woocommerce');
-                wp_send_json_error(['message' => $err]);
-            }
-        } else {
-            // phpcs:ignore PluginCheck.CodeAnalysis.AIProvider.DirectIntegration
-            $url = 'https://generativelanguage.googleapis.com/v1beta/models?key=' . urlencode($api_key);
-            $response = wp_remote_get($url, [
-                'timeout' => 15
-            ]);
-
-            if (is_wp_error($response)) {
-                wp_send_json_error(['message' => $response->get_error_message()]);
-            }
-
-            $code = wp_remote_retrieve_response_code($response);
-            if ($code !== 200) {
-                $body = json_decode(wp_remote_retrieve_body($response), true);
-                $err = $body['error']['message'] ?? __('Invalid Google Gemini API Key or unauthorized request.', 'product-faq-for-woocommerce');
-                wp_send_json_error(['message' => $err]);
-            }
         }
 
-        /* translators: %s: Name of the AI provider (e.g. OpenAI or Google Gemini). */
-        wp_send_json_success(['message' => sprintf(__('Connection to %s verified successfully! AI engine is ready.', 'product-faq-for-woocommerce'), $provider === 'openai' ? 'OpenAI' : 'Google Gemini')]);
+        $result = self::generateTextWithWpAi(
+            'Reply with the single word: OK',
+            'You are a connection verification assistant.',
+            0.1
+        );
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(['message' => $result->get_error_message()]);
+        }
+
+        wp_send_json_success([
+            'message' => __('WordPress Default AI Connection verified successfully! AI FAQ Assistant is ready.', 'product-faq-for-woocommerce')
+        ]);
     }
 
     /**
-     * Generate FAQs using AI based on product context
+     * Generate FAQs using WordPress Default AI Connection based on product context
      */
     public function generateAiFaqs()
     {
@@ -91,227 +197,40 @@ class AiEngine
         $product_desc  = isset($_POST['product_desc']) ? sanitize_textarea_field(wp_unslash($_POST['product_desc'])) : '';
         $count         = isset($_POST['count']) ? intval(wp_unslash($_POST['count'])) : 3;
         $count         = max(1, min($count, 3)); // Free version capped at 3
-        $tone          = isset($_POST['tone']) ? sanitize_text_field(wp_unslash($_POST['tone'])) : 'sales';
+        $tone          = isset($_POST['tone']) ? sanitize_text_field(wp_unslash($_POST['tone'])) : get_option('woo_faq_ai_tone', 'sales');
 
-        $provider = get_option('woo_faq_ai_provider', 'gemini');
-        $api_key = get_option('woo_faq_ai_api_key', '');
-
-        // If no API key configured, provide contextual smart templates as demo
-        if (empty($api_key)) {
+        // If WordPress AI Client is not configured yet, provide contextual smart templates as demo
+        if (!self::isAiReady()) {
             $demo_faqs = $this->generateFallbackFaqs($product_title, $product_desc, $count);
             wp_send_json_success([
-                'faqs' => $demo_faqs,
+                'faqs'    => $demo_faqs,
                 'is_demo' => true,
-                'message' => __('Generated using built-in Smart Assistant. Connect your Gemini or OpenAI API key in Settings -> AI Assistant for live AI.', 'product-faq-for-woocommerce')
+                'message' => __('Generated using built-in Smart Assistant. Connect an AI provider in WordPress Settings -> Connectors for live AI generation.', 'product-faq-for-woocommerce')
             ]);
         }
 
-        $system_instructions = "You are an expert WooCommerce eCommerce conversion copywriter. Create high-converting, realistic customer Frequently Asked Questions (FAQs) and answers for the following product.\n";
+        $system_instructions  = "You are an expert WooCommerce eCommerce conversion copywriter. Create high-converting, realistic customer Frequently Asked Questions (FAQs) and answers for the following product.\n";
         $system_instructions .= "Tone: " . esc_html($tone) . " (address shopper objections such as delivery, returns, sizing/compatibility, quality, usage).\n";
         $system_instructions .= "Return ONLY valid JSON matching this exact structure: {\"faqs\": [{\"question\": \"...\", \"answer\": \"...\"}]}.\n";
-        $system_instructions .= "Number of FAQs to generate: " . $count . ".\n\n";
+        $system_instructions .= "Number of FAQs to generate: " . $count . ".";
 
         $product_context = "Product Name: " . $product_title . "\n";
         if (!empty($product_desc)) {
             $product_context .= "Product Description: " . wp_strip_all_tags($product_desc) . "\n";
         }
 
-        $full_prompt = $system_instructions . $product_context;
+        $raw_text = self::generateTextWithWpAi($product_context, $system_instructions, 0.7);
 
-        if ($provider === 'openai') {
-            $response = $this->callOpenAi($api_key, $full_prompt, $count);
-        } else {
-            $response = $this->callGemini($api_key, $full_prompt, $count);
+        if (is_wp_error($raw_text)) {
+            wp_send_json_error(['message' => $raw_text->get_error_message()]);
         }
 
-        if (is_wp_error($response)) {
-            wp_send_json_error(['message' => $response->get_error_message()]);
-        }
+        $faqs = $this->extractFaqsFromRawText((string) $raw_text, $count);
 
         wp_send_json_success([
-            'faqs' => $response,
+            'faqs'    => $faqs,
             'is_demo' => false
         ]);
-    }
-
-    /**
-     * Discover supported Gemini model for the user's API key
-     */
-    private function getGeminiWorkingModel($api_key)
-    {
-        $cached = get_transient('woo_faq_gemini_model_' . md5($api_key));
-        if (!empty($cached)) {
-            return $cached;
-        }
-
-        // phpcs:ignore PluginCheck.CodeAnalysis.AIProvider.DirectIntegration
-        $list_url = 'https://generativelanguage.googleapis.com/v1beta/models?key=' . urlencode($api_key);
-        $response = wp_remote_get($list_url, ['timeout' => 15]);
-
-        if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
-            $data = json_decode(wp_remote_retrieve_body($response), true);
-            if (!empty($data['models']) && is_array($data['models'])) {
-                // Priority 1: Flash models (fastest and free)
-                foreach ($data['models'] as $m) {
-                    $name = $m['name'] ?? '';
-                    $methods = $m['supportedGenerationMethods'] ?? [];
-                    if (in_array('generateContent', $methods) && stripos($name, 'flash') !== false) {
-                        set_transient('woo_faq_gemini_model_' . md5($api_key), $name, 7 * DAY_IN_SECONDS);
-                        return $name;
-                    }
-                }
-                // Priority 2: Any model supporting generateContent
-                foreach ($data['models'] as $m) {
-                    $name = $m['name'] ?? '';
-                    $methods = $m['supportedGenerationMethods'] ?? [];
-                    if (in_array('generateContent', $methods)) {
-                        set_transient('woo_faq_gemini_model_' . md5($api_key), $name, 7 * DAY_IN_SECONDS);
-                        return $name;
-                    }
-                }
-            }
-        }
-
-        return 'models/gemini-1.5-flash-latest';
-    }
-
-    /**
-     * Call Google Gemini API with intelligent fallback chain
-     */
-    private function callGemini($api_key, $prompt, $count)
-    {
-        $selected_model = get_option('woo_faq_ai_model', 'gemini-3.6-flash');
-        if (empty($selected_model) || stripos($selected_model, 'gpt') !== false) {
-            $selected_model = 'gemini-3.6-flash';
-        }
-
-        // Map old/deprecated names to active models
-        $model_mapping = [
-            'gemini-1.5-flash'    => 'gemini-3.6-flash',
-            'gemini-2.5-flash'    => 'gemini-3.6-flash',
-            'gemini-1.5-pro'      => 'gemini-3.6-flash',
-            'gemini-2.5-pro'      => 'gemini-3.6-flash',
-            'gemini-flash-latest' => 'gemini-3.6-flash'
-        ];
-
-        $clean_selected = preg_replace('#^models/#', '', trim($selected_model));
-        if (isset($model_mapping[$clean_selected])) {
-            $clean_selected = $model_mapping[$clean_selected];
-        }
-
-        // Build candidate models chain for high availability
-        $candidates = array_unique([
-            $clean_selected,
-            'gemini-3.6-flash',
-            'gemini-3.5-flash',
-            'gemini-3.7-flash',
-            'gemini-flash-latest'
-        ]);
-
-        $body = [
-            'contents' => [
-                [
-                    'parts' => [
-                        ['text' => $prompt]
-                    ]
-                ]
-            ],
-            'generationConfig' => [
-                'temperature' => 0.7
-            ]
-        ];
-
-        $last_error_message = '';
-
-        foreach ($candidates as $model_to_try) {
-            // phpcs:ignore PluginCheck.CodeAnalysis.AIProvider.DirectIntegration
-            $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . urlencode($model_to_try) . ':generateContent?key=' . urlencode($api_key);
-
-            $response = wp_remote_post($url, [
-                'headers' => ['Content-Type' => 'application/json'],
-                'body'    => wp_json_encode($body),
-                'timeout' => 30
-            ]);
-
-            if (is_wp_error($response)) {
-                $last_error_message = $response->get_error_message();
-                continue;
-            }
-
-            $status = wp_remote_retrieve_response_code($response);
-            $raw_body = wp_remote_retrieve_body($response);
-            $data = json_decode($raw_body, true);
-
-            if ($status === 200 && !empty($data['candidates'][0]['content']['parts'][0]['text'])) {
-                $text = $data['candidates'][0]['content']['parts'][0]['text'];
-                return $this->extractFaqsFromRawText($text, $count);
-            }
-
-            if (!empty($data['error']['message'])) {
-                $last_error_message = $data['error']['message'];
-            }
-        }
-
-        if (!empty($last_error_message)) {
-            return new \WP_Error('gemini_error', $last_error_message);
-        }
-
-        return new \WP_Error('gemini_error', __('Could not generate FAQs from Gemini API. Please try again.', 'product-faq-for-woocommerce'));
-    }
-
-    /**
-     * Call OpenAI API
-     */
-    private function callOpenAi($api_key, $prompt, $count)
-    {
-        $selected_model = get_option('woo_faq_ai_model', 'gpt-4o-mini');
-        if (empty($selected_model) || stripos($selected_model, 'gemini') !== false) {
-            $selected_model = 'gpt-4o-mini';
-        }
-
-        // phpcs:ignore PluginCheck.CodeAnalysis.AIProvider.DirectIntegration
-        $url = 'https://api.openai.com/v1/chat/completions';
-
-        $body = [
-            'model' => $selected_model,
-            'messages' => [
-                ['role' => 'system', 'content' => 'You are a professional WooCommerce FAQ copywriter. Return ONLY valid JSON: {"faqs": [{"question": "...", "answer": "..."}]}'],
-                ['role' => 'user', 'content' => $prompt]
-            ],
-            'response_format' => ['type' => 'json_object'],
-            'temperature' => 0.7
-        ];
-
-        $response = wp_remote_post($url, [
-            'headers' => [
-                'Content-Type'  => 'application/json',
-                'Authorization' => 'Bearer ' . $api_key
-            ],
-            'body'    => wp_json_encode($body),
-            'timeout' => 30
-        ]);
-
-        if (is_wp_error($response)) {
-            return $response;
-        }
-
-        $status = wp_remote_retrieve_response_code($response);
-        $raw_body = wp_remote_retrieve_body($response);
-        $data = json_decode($raw_body, true);
-
-        if ($status !== 200 || !empty($data['error'])) {
-            $err = $data['error']['message'] ?? __('OpenAI API request failed.', 'product-faq-for-woocommerce');
-            return new \WP_Error('openai_error', $err);
-        }
-
-        $text = $data['choices'][0]['message']['content'] ?? '';
-        $parsed = json_decode($text, true);
-
-        if (isset($parsed['faqs']) && is_array($parsed['faqs'])) {
-            return $parsed['faqs'];
-        }
-
-        return $this->extractFaqsFromRawText($text, $count);
     }
 
     /**
@@ -345,7 +264,7 @@ class AiEngine
     }
 
     /**
-     * Smart fallback generator when no API key is provided
+     * Smart fallback generator when no AI connector is configured
      */
     private function generateFallbackFaqs($title, $desc, $count)
     {

@@ -143,20 +143,12 @@ $is_pro_active = in_array( 'woo-product-faq-pro/product-faq-pro.php', apply_filt
                 <div id="tab-ai" class="tab-content">
                     <h2>🤖 AI FAQ Assistant Settings</h2>
                     <p style="color: #4b5563; font-size: 14px; margin-bottom: 20px;">
-                        Connect your AI provider to instantly generate high-converting, objection-busting FAQs for your WooCommerce products in 1 click.
+                        Uses WordPress's native AI Client &amp; Connectors to generate high-converting, objection-busting FAQs for your WooCommerce products in 1 click.
                     </p>
                     <table class="form-table">
                         <tr valign="top">
-                            <th scope="row">AI Provider</th>
-                            <td><?php $menu_instance->AiProvider(); ?></td>
-                        </tr>
-                        <tr valign="top">
-                            <th scope="row">AI Model</th>
-                            <td><?php $menu_instance->AiModel(); ?></td>
-                        </tr>
-                        <tr valign="top">
-                            <th scope="row">API Key</th>
-                            <td><?php $menu_instance->AiApiKey(); ?></td>
+                            <th scope="row">WordPress AI Connection</th>
+                            <td><?php $menu_instance->AiConnectorStatus(); ?></td>
                         </tr>
                         <tr valign="top">
                             <th scope="row">Default Generation Tone</th>

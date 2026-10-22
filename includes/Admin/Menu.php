@@ -108,9 +108,6 @@ class Menu{
         register_setting('woofaq-settings-group', 'faq_question_font_size', [$this, 'sanitizeTextField']);
         register_setting('woofaq-settings-group', 'faq_ans_font_size', [$this, 'sanitizeTextField']);
         register_setting('woofaq-settings-group', 'woo_faq_enable_schema', [$this, 'sanitizeTextField']);
-        register_setting('woofaq-settings-group', 'woo_faq_ai_provider', [$this, 'sanitizeTextField']);
-        register_setting('woofaq-settings-group', 'woo_faq_ai_model', [$this, 'sanitizeTextField']);
-        register_setting('woofaq-settings-group', 'woo_faq_ai_api_key', [$this, 'sanitizeTextField']);
         register_setting('woofaq-settings-group', 'woo_faq_ai_tone', [$this, 'sanitizeTextField']);
     }
 
@@ -314,58 +311,81 @@ class Menu{
     }
 
     /**
-     * Display AI Provider selection
+     * Display WordPress Default AI Connection (Settings -> Connectors) Status Card
      */
-    public function AiProvider(){
-        $provider = get_option('woo_faq_ai_provider', 'gemini');
+    public function AiConnectorStatus(){
+        $status         = AiEngine::getConnectorsStatus();
+        $is_ready       = ! empty( $status['is_ready'] );
+        $connectors_url = $status['connectors_url'];
+        $wp_ai_url      = $status['wp_ai_url'];
+        $providers      = $status['providers'] ?? [];
         ?>
-            <select name="woo_faq_ai_provider" id="woo_faq_ai_provider">
-                <option value="gemini" <?php selected($provider, 'gemini'); ?>>Google Gemini (Fast & Free Tier)</option>
-                <option value="openai" <?php selected($provider, 'openai'); ?>>OpenAI (ChatGPT / GPT-4o-mini)</option>
-            </select>
-        <?php
-    }
-
-    /**
-     * Display AI Model selection
-     */
-    public function AiModel(){
-        $provider = get_option('woo_faq_ai_provider', 'gemini');
-        $model = get_option('woo_faq_ai_model', 'gemini-3.6-flash');
-        ?>
-            <select name="woo_faq_ai_model" id="woo_faq_ai_model">
-                <optgroup label="Google Gemini Models" id="optgroup-gemini">
-                    <option value="gemini-3.6-flash" <?php selected($model, 'gemini-3.6-flash'); ?>>Gemini 3.6 Flash (Recommended - High Speed & High Reliability)</option>
-                    <option value="gemini-flash-latest" <?php selected($model, 'gemini-flash-latest'); ?>>Gemini Flash Latest (Auto-Updated)</option>
-                    <option value="gemini-3.5-flash" <?php selected($model, 'gemini-3.5-flash'); ?>>Gemini 3.5 Flash</option>
-                    <option value="gemini-3.7-flash" <?php selected($model, 'gemini-3.7-flash'); ?>>Gemini 3.7 Flash</option>
-                </optgroup>
-                <optgroup label="OpenAI Models" id="optgroup-openai">
-                    <option value="gpt-4o-mini" <?php selected($model, 'gpt-4o-mini'); ?>>GPT-4o mini (Recommended - Fast & Cost-Effective)</option>
-                    <option value="gpt-4o" <?php selected($model, 'gpt-4o'); ?>>GPT-4o (High Intelligence)</option>
-                    <option value="gpt-3.5-turbo" <?php selected($model, 'gpt-3.5-turbo'); ?>>GPT-3.5 Turbo (Legacy)</option>
-                </optgroup>
-            </select>
-            <p class="description"><?php esc_html_e('Select which AI model is used for generating WooCommerce product FAQs.', 'product-faq-for-woocommerce'); ?></p>
-        <?php
-    }
-
-    /**
-     * Display AI API Key input
-     */
-    public function AiApiKey(){
-        $key = get_option('woo_faq_ai_api_key', '');
-        ?>
-            <div style="display: flex; gap: 10px; align-items: center; max-width: 500px;">
-                <input type="password" name="woo_faq_ai_api_key" id="woo_faq_ai_api_key" value="<?php echo esc_attr($key); ?>" placeholder="<?php esc_attr_e('Paste your Google Gemini or OpenAI API Key here', 'product-faq-for-woocommerce'); ?>" style="flex: 1;" />
-                <button type="button" class="button button-secondary" id="woo-faq-test-ai-key"><?php esc_html_e('Test Connection', 'product-faq-for-woocommerce'); ?></button>
-            </div>
-            <p class="description" style="margin-top: 6px;">
-                <span id="woo-faq-ai-test-result" style="font-weight: 600;"></span>
-                <span id="woo-faq-key-hint">
-                    Get a free Gemini API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a> or OpenAI key from <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a>.
+        <div style="background: #ffffff; border: 1px solid <?php echo $is_ready ? '#a7f3d0' : '#fde68a'; ?>; border-radius: 10px; padding: 18px 20px; max-width: 620px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: <?php echo $is_ready ? '#d1fae5' : '#fef3c7'; ?>; font-size: 16px;">
+                        <?php echo $is_ready ? '✅' : '⚠️'; ?>
+                    </span>
+                    <div>
+                        <div style="font-weight: 600; font-size: 14px; color: #1e293b;">
+                            <?php
+                            if ( $is_ready ) {
+                                esc_html_e( 'Connected via WordPress AI Connectors', 'product-faq-for-woocommerce' );
+                            } else {
+                                esc_html_e( 'No Active AI Connector Configured', 'product-faq-for-woocommerce' );
+                            }
+                            ?>
+                        </div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                            <?php esc_html_e( 'Uses WordPress native AI Client (wp_ai_client_prompt) & Settings ➔ Connectors.', 'product-faq-for-woocommerce' ); ?>
+                        </div>
+                    </div>
+                </div>
+                <span style="display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: <?php echo $is_ready ? '#ecfdf5' : '#fffbeb'; ?>; color: <?php echo $is_ready ? '#047857' : '#b45309'; ?>; border: 1px solid <?php echo $is_ready ? '#6ee7b7' : '#fcd34d'; ?>;">
+                    <?php echo $is_ready ? esc_html__( 'Ready', 'product-faq-for-woocommerce' ) : esc_html__( 'Setup Needed', 'product-faq-for-woocommerce' ); ?>
                 </span>
+            </div>
+
+            <?php if ( ! empty( $providers ) ) : ?>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 16px 0; padding-top: 12px; border-top: 1px solid #f1f5f9;">
+                    <?php foreach ( $providers as $prov ) : ?>
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 6px; font-size: 12px; background: <?php echo ! empty( $prov['is_connected'] ) ? '#f0fdf4' : '#f8fafc'; ?>; border: 1px solid <?php echo ! empty( $prov['is_connected'] ) ? '#bbf7d0' : '#e2e8f0'; ?>; color: #334155;">
+                            <span style="width: 7px; height: 7px; border-radius: 50%; background: <?php echo ! empty( $prov['is_connected'] ) ? '#10b981' : '#94a3b8'; ?>;"></span>
+                            <strong><?php echo esc_html( $prov['name'] ); ?>:</strong>
+                            <span>
+                                <?php
+                                if ( ! empty( $prov['is_connected'] ) ) {
+                                    esc_html_e( 'Connected', 'product-faq-for-woocommerce' );
+                                } elseif ( ! empty( $prov['has_key'] ) && empty( $prov['plugin_active'] ) ) {
+                                    esc_html_e( 'Provider Plugin Inactive', 'product-faq-for-woocommerce' );
+                                } else {
+                                    esc_html_e( 'Not Connected', 'product-faq-for-woocommerce' );
+                                }
+                                ?>
+                            </span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+                <a href="<?php echo esc_url( $connectors_url ); ?>" class="button button-primary" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span>⚙️</span> <?php esc_html_e( 'Manage WordPress Connectors', 'product-faq-for-woocommerce' ); ?>
+                </a>
+                <button type="button" class="button button-secondary" id="woo-faq-test-ai-key">
+                    <?php esc_html_e( 'Test AI Connection', 'product-faq-for-woocommerce' ); ?>
+                </button>
+                <?php if ( ! empty( $wp_ai_url ) ) : ?>
+                    <a href="<?php echo esc_url( $wp_ai_url ); ?>" class="button button-link" style="text-decoration: none;">
+                        <?php esc_html_e( 'WordPress AI Settings ➔', 'product-faq-for-woocommerce' ); ?>
+                    </a>
+                <?php endif; ?>
+            </div>
+
+            <p class="description" style="margin-top: 8px; margin-bottom: 0;">
+                <span id="woo-faq-ai-test-result" style="font-weight: 600;"></span>
             </p>
+        </div>
         <?php
     }
 

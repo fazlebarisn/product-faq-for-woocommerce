@@ -29,44 +29,14 @@ jQuery(document).ready(function($) {
         $('.color-field').wpColorPicker();
     }
 
-    // Toggle AI Model dropdown options based on selected AI Provider
-    function updateAiModelOptions() {
-        var provider = $('#woo_faq_ai_provider').val();
-        if (provider === 'openai') {
-            $('#optgroup-gemini').hide();
-            $('#optgroup-openai').show();
-            if ($('#woo_faq_ai_model option:selected').parent().attr('id') === 'optgroup-gemini') {
-                $('#woo_faq_ai_model').val('gpt-4o-mini');
-            }
-        } else {
-            $('#optgroup-gemini').show();
-            $('#optgroup-openai').hide();
-            if ($('#woo_faq_ai_model option:selected').parent().attr('id') === 'optgroup-openai') {
-                $('#woo_faq_ai_model').val('gemini-3.6-flash');
-            }
-        }
-    }
-
-    $('#woo_faq_ai_provider').on('change', function() {
-        updateAiModelOptions();
-    });
-    updateAiModelOptions();
-
-    // AI Connection Test Handler
+    // WordPress Default AI Connection Test Handler
     $(document).on('click', '#woo-faq-test-ai-key', function(e) {
         e.preventDefault();
         var $btn = $(this);
         var $result = $('#woo-faq-ai-test-result');
-        var provider = $('#woo_faq_ai_provider').val();
-        var apiKey = $('#woo_faq_ai_api_key').val();
-
-        if (!apiKey || apiKey.trim() === '') {
-            $result.css('color', '#ef4444').text('❌ Please paste an API key first.');
-            return;
-        }
 
         $btn.prop('disabled', true).text('Testing...');
-        $result.css('color', '#6b7280').text('Testing connection to ' + provider + '...');
+        $result.css('color', '#6b7280').text('Testing WordPress AI Connection...');
 
         var ajaxUrl = typeof faqAjax !== 'undefined' && faqAjax.ajax_url ? faqAjax.ajax_url : (typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php');
         var nonce = typeof faqAjax !== 'undefined' && faqAjax.nonce ? faqAjax.nonce : '';
@@ -76,23 +46,21 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data: {
                 action: 'woo_faq_test_ai_connection',
-                nonce: nonce,
-                provider: provider,
-                api_key: apiKey
+                nonce: nonce
             },
             success: function(response) {
-                $btn.prop('disabled', false).text('Test Connection');
+                $btn.prop('disabled', false).text('Test AI Connection');
                 if (response && response.success) {
                     $result.css('color', '#10b981').text('✅ ' + response.data.message);
                 } else {
-                    var errMsg = response && response.data && response.data.message ? response.data.message : 'Connection failed. Please check your API key.';
+                    var errMsg = response && response.data && response.data.message ? response.data.message : 'Connection failed. Please check Settings -> Connectors.';
                     $result.css('color', '#ef4444').text('❌ ' + errMsg);
                 }
             },
             error: function(xhr, status, error) {
-                $btn.prop('disabled', false).text('Test Connection');
+                $btn.prop('disabled', false).text('Test AI Connection');
                 $result.css('color', '#ef4444').text('❌ Server request failed: ' + (error || 'Network error'));
             }
         });
     });
-}); 
+});
