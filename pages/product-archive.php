@@ -247,7 +247,7 @@ if ( ! empty( $saved_data ) && is_array( $saved_data ) ) {
 				var $group = $(this);
 				var archiveType = $group.find('select.archive-type').val();
 				var selectedTerms = $group.find('.selected-terms input[type="hidden"]');
-				if ((archiveType === 'product_cat' || archiveType === 'product_tag') && selectedTerms.length === 0) {
+				if (archiveType && selectedTerms.length === 0) {
 					hasError = true;
 					if ($group.find('.fbs-term-error').length === 0) {
 						$group.find('.selected-terms').after('<div class="fbs-term-error">Please select at least one term.</div>');

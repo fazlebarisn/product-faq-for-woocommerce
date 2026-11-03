@@ -333,7 +333,8 @@ class AiEngine {
 		$product_title = isset( $_POST['product_title'] ) ? sanitize_text_field( wp_unslash( $_POST['product_title'] ) ) : '';
 		$product_desc  = isset( $_POST['product_desc'] ) ? sanitize_textarea_field( wp_unslash( $_POST['product_desc'] ) ) : '';
 		$count         = isset( $_POST['count'] ) ? intval( wp_unslash( $_POST['count'] ) ) : 3;
-		$count         = max( 1, min( $count, 3 ) ); // Free version capped at 3.
+		$max_ai_count  = (int) apply_filters( 'woo_faq_ai_max_count', 3 );
+		$count         = max( 1, min( $count, max( 1, $max_ai_count ) ) );
 		$tone          = isset( $_POST['tone'] ) ? sanitize_text_field( wp_unslash( $_POST['tone'] ) ) : get_option( 'woo_faq_ai_tone', 'sales' );
 
 		$product_context = self::buildProductSpecContext( $product_id, $product_title, $product_desc );

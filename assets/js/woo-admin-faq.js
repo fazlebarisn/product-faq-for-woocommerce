@@ -271,7 +271,7 @@
       const selected = $(this).val();
       const $termRow = $group.find(".archive-term-row");
 
-      if (selected === "product_cat" || selected === "product_tag") {
+      if (selected && selected !== "") {
         $termRow.show();
       } else {
         $termRow.hide();

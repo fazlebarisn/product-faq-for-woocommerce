@@ -48,8 +48,9 @@ class Tools {
 	 * @return array<string, mixed>
 	 */
 	public static function buildExportPayload() {
-		$settings = [];
-		foreach ( self::EXPORTABLE_OPTIONS as $option_key ) {
+		$settings       = [];
+		$export_options = (array) apply_filters( 'woo_faq_exportable_option_keys', self::EXPORTABLE_OPTIONS );
+		foreach ( $export_options as $option_key ) {
 			$val = get_option( $option_key, null );
 			if ( null !== $val && false !== $val ) {
 				$settings[ $option_key ] = (string) $val;
@@ -117,9 +118,12 @@ class Tools {
 
 		$settings_imported = 0;
 		if ( isset( $decoded['settings'] ) && is_array( $decoded['settings'] ) ) {
-			foreach ( self::EXPORTABLE_OPTIONS as $option_key ) {
+			$export_options = (array) apply_filters( 'woo_faq_exportable_option_keys', self::EXPORTABLE_OPTIONS );
+			foreach ( $export_options as $option_key ) {
 				if ( array_key_exists( $option_key, $decoded['settings'] ) && is_scalar( $decoded['settings'][ $option_key ] ) ) {
-					$clean_val = sanitize_text_field( (string) $decoded['settings'][ $option_key ] );
+					$clean_val = ( 'woo_faq_custom_css' === $option_key )
+						? wp_strip_all_tags( (string) $decoded['settings'][ $option_key ] )
+						: sanitize_text_field( (string) $decoded['settings'][ $option_key ] );
 					update_option( $option_key, $clean_val );
 					++$settings_imported;
 				}

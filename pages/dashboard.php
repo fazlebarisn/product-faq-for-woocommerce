@@ -1,7 +1,7 @@
 <?php
 defined( 'ABSPATH' ) || die( 'Nice Try!' );
 
-$is_pro_active  = in_array( 'woo-product-faq-pro/product-faq-pro.php', apply_filters( 'active_plugins', get_option( 'active_plugins', [] ) ), true );
+$is_pro_active  = in_array( 'woo-product-faq-pro/product-faq-pro.php', apply_filters( 'active_plugins', get_option( 'active_plugins', [] ) ), true ) && ( ! function_exists( 'faq_pro_is_license_active' ) || faq_pro_is_license_active() );
 $export_url     = wp_nonce_url( admin_url( 'admin-post.php?action=woo_faq_export_json' ), 'woo_faq_export_nonce', 'woo_faq_nonce' );
 $pro_tab_url    = woo_faq_utm_url( 'plugins/', 'pro-upgrade', 'settings-pro-tab', 'product-faq' );
 $pro_field_url  = woo_faq_utm_url( 'plugins/', 'pro-upgrade', 'settings-locked-field', 'product-faq' );
