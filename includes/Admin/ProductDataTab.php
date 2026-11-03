@@ -23,8 +23,36 @@ class ProductDataTab {
 	 * @return array<string, mixed>
 	 */
 	public function faq_product_edit_tab( $product_data_tab ) {
+		$tab_label = __( 'FAQ', 'product-faq-for-woocommerce' );
+
+		if ( 'disable' !== get_option( 'woo_faq_show_count_badge', 'enable' ) ) {
+			global $post;
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only product ID lookup for initial admin tab count label.
+			$post_id = ( isset( $post->ID ) && $post->ID > 0 ) ? (int) $post->ID : ( isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0 );
+
+			if ( $post_id > 0 ) {
+				$saved_faqs = get_post_meta( $post_id, 'faq', true );
+				$faq_count  = 0;
+
+				if ( is_array( $saved_faqs ) && ! empty( $saved_faqs['question'] ) && is_array( $saved_faqs['question'] ) ) {
+					foreach ( $saved_faqs['question'] as $idx => $q_text ) {
+						$q_clean = trim( (string) $q_text );
+						$a_clean = trim( (string) ( $saved_faqs['answer'][ $idx ] ?? '' ) );
+						if ( '' !== $q_clean || '' !== $a_clean ) {
+							++$faq_count;
+						}
+					}
+				}
+
+				if ( $faq_count > 0 ) {
+					/* translators: %d: number of FAQs configured for this product */
+					$tab_label = sprintf( __( 'FAQ (%d)', 'product-faq-for-woocommerce' ), $faq_count );
+				}
+			}
+		}
+
 		$faq_tab['frequently_asked_questions'] = [
-			'label'  => __( 'FAQ', 'product-faq-for-woocommerce' ),
+			'label'  => $tab_label,
 			'target' => 'frequently_asked_questions',
 			'class'  => [ 'hide_if_downloadable', 'hide_if_grouped' ],
 		];

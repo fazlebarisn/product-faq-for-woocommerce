@@ -15,8 +15,11 @@ class Enqueue {
 	public function enqueue() {
 		wp_enqueue_script( 'jquery-ui-autocomplete' );
 
-		wp_enqueue_style( 'faq-admin-style', WOO_FAQ_URL . '/assets/css/woo-admin-faq.css', [], WOO_FAQ_VERSION, 'all' );
-		wp_enqueue_script( 'faq-admin-script', WOO_FAQ_URL . '/assets/js/woo-admin-faq.js', [ 'jquery', 'jquery-ui-autocomplete' ], WOO_FAQ_VERSION, true );
+		$admin_css_ver = file_exists( WOO_FAQ_PATH . '/assets/css/woo-admin-faq.css' ) ? WOO_FAQ_VERSION . '.' . filemtime( WOO_FAQ_PATH . '/assets/css/woo-admin-faq.css' ) : WOO_FAQ_VERSION;
+		$admin_js_ver  = file_exists( WOO_FAQ_PATH . '/assets/js/woo-admin-faq.js' ) ? WOO_FAQ_VERSION . '.' . filemtime( WOO_FAQ_PATH . '/assets/js/woo-admin-faq.js' ) : WOO_FAQ_VERSION;
+
+		wp_enqueue_style( 'faq-admin-style', WOO_FAQ_URL . '/assets/css/woo-admin-faq.css', [], $admin_css_ver, 'all' );
+		wp_enqueue_script( 'faq-admin-script', WOO_FAQ_URL . '/assets/js/woo-admin-faq.js', [ 'jquery', 'jquery-ui-autocomplete' ], $admin_js_ver, true );
 
 		wp_localize_script(
 			'faq-admin-script',
@@ -40,8 +43,10 @@ class Enqueue {
 			'faq-admin-script',
 			'wooFaqPro',
 			[
-				'is_pro'      => $is_pro,
-				'upgrade_url' => woo_faq_utm_url( 'plugins/', 'pro-upgrade', 'limit-reached-button', 'product-faq' ),
+				'is_pro'           => $is_pro,
+				'show_count_badge' => ( 'disable' !== get_option( 'woo_faq_show_count_badge', 'enable' ) ),
+				'tab_label'        => __( 'FAQ', 'product-faq-for-woocommerce' ),
+				'upgrade_url'      => woo_faq_utm_url( 'plugins/', 'pro-upgrade', 'limit-reached-button', 'product-faq' ),
 			]
 		);
 	}

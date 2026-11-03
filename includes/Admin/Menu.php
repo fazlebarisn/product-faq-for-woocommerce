@@ -252,10 +252,10 @@ class Menu {
 		$show_badge = get_option( 'woo_faq_show_count_badge', 'enable' );
 		?>
 		<select name="woo_faq_show_count_badge" id="woo_faq_show_count_badge">
-			<option value="enable" <?php selected( $show_badge, 'enable' ); ?>><?php esc_html_e( 'Enable — Show live count on Product Tab (e.g. FAQs (5))', 'product-faq-for-woocommerce' ); ?></option>
+			<option value="enable" <?php selected( $show_badge, 'enable' ); ?>><?php esc_html_e( 'Enable — Show live FAQ count badge (Product Tab, Section Heading & Admin Tab)', 'product-faq-for-woocommerce' ); ?></option>
 			<option value="disable" <?php selected( $show_badge, 'disable' ); ?>><?php esc_html_e( 'Disable', 'product-faq-for-woocommerce' ); ?></option>
 		</select>
-		<p class="description"><?php esc_html_e( 'Displays a live question counter badge when FAQs are placed inside the WooCommerce Product Tab.', 'product-faq-for-woocommerce' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Displays a live question counter pill badge on the WooCommerce Product Tab, FAQ section heading, and Admin Product Data tab.', 'product-faq-for-woocommerce' ); ?></p>
 		<?php
 	}
 

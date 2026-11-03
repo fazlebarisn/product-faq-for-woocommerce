@@ -46,7 +46,7 @@ $hire_us_url    = woo_faq_utm_url( 'hire-us/', 'agency-services', 'settings-foot
 							<td><?php $menu_instance->Heading(); ?></td>
 						</tr>
 						<tr valign="top">
-							<th scope="row"><?php esc_html_e( 'Product Tab Count Badge', 'product-faq-for-woocommerce' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'FAQ Count Badge', 'product-faq-for-woocommerce' ); ?></th>
 							<td><?php $menu_instance->ShowCountBadge(); ?></td>
 						</tr>
 						<tr valign="top">

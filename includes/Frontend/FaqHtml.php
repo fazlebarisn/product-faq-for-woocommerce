@@ -21,6 +21,13 @@ class FaqHtml {
 		$product_faq          = esc_attr( (string) get_option( 'product_faq', 'enable' ) );
 		$product_faq_position = esc_attr( (string) get_option( 'product_faq_position', 'after_single_product' ) );
 
+		if ( '' === $product_faq ) {
+			$product_faq = 'enable';
+		}
+		if ( '' === $product_faq_position ) {
+			$product_faq_position = 'after_single_product';
+		}
+
 		if ( 'disable' === $product_faq ) {
 			return;
 		}
@@ -288,25 +295,52 @@ class FaqHtml {
 	}
 
 	/**
+	 * Reliably resolve the active WooCommerce Product ID across Classic Themes, Block Themes (ProductDetails), and Page Builders.
+	 *
+	 * @return int
+	 */
+	private function resolveCurrentProductId() {
+		global $product;
+		if ( is_object( $product ) && method_exists( $product, 'get_id' ) ) {
+			$pid = (int) $product->get_id();
+			if ( $pid > 0 ) {
+				return $pid;
+			}
+		}
+
+		$current_id = (int) get_the_ID();
+		if ( $current_id > 0 && 'product' === get_post_type( $current_id ) ) {
+			return $current_id;
+		}
+
+		if ( function_exists( 'get_queried_object_id' ) ) {
+			$queried_id = (int) get_queried_object_id();
+			if ( $queried_id > 0 && 'product' === get_post_type( $queried_id ) ) {
+				return $queried_id;
+			}
+		}
+
+		return 0;
+	}
+
+	/**
 	 * Render FAQ HTML on Single Product Page, Gutenberg Block, or via [woo_product_faq] Shortcode.
 	 *
 	 * @param int|string $custom_product_id Optional custom product ID from shortcode/block.
 	 * @param string     $custom_title      Optional custom heading override.
 	 * @param string     $category          Optional category ID or slug.
 	 * @param bool       $is_shortcode      Whether invoked via shortcode/block.
+	 * @param bool       $is_inside_tab     Whether rendered inside the WooCommerce Product Tab panel.
 	 * @return void
 	 */
-	public function rendeFaqHtml( $custom_product_id = 0, $custom_title = '', $category = '', $is_shortcode = false ) {
+	public function rendeFaqHtml( $custom_product_id = 0, $custom_title = '', $category = '', $is_shortcode = false, $is_inside_tab = false ) {
 		$explicit_product_id = is_numeric( $custom_product_id ) && intval( $custom_product_id ) > 0 ? intval( $custom_product_id ) : 0;
 		$product_id          = $explicit_product_id;
 
 		if ( ! $product_id && empty( $category ) ) {
-			if ( ! $is_shortcode && ( ! function_exists( 'is_product' ) || ! is_product() ) ) {
+			$product_id = $this->resolveCurrentProductId();
+			if ( ! $is_shortcode && $product_id <= 0 ) {
 				return;
-			}
-			$current_id = get_the_ID();
-			if ( $current_id && 'product' === get_post_type( $current_id ) ) {
-				$product_id = $current_id;
 			}
 		}
 
@@ -341,14 +375,19 @@ class FaqHtml {
 		$faq_ans_style      = ( '' !== $faq_ans_color ? 'color:' . $faq_ans_color . ';' : '' ) . ( '' !== $faq_ans_font_size ? 'font-size:' . $faq_ans_font_size . ';' : '' );
 		?>
 		<div class="container woo-faq-container" data-faq-source="<?php echo esc_attr( $source ); ?>">
-			<h2 style="<?php echo esc_attr( $faq_heading_style ); ?>">
-				<?php
-				if ( ! empty( $faq_heading ) ) {
-					echo esc_html( $faq_heading );
-				} else {
-					echo esc_html__( 'Frequently Asked Questions', 'product-faq-for-woocommerce' );
-				}
-				?>
+			<h2 class="woo-faq-heading" style="<?php echo esc_attr( $faq_heading_style ); ?>">
+				<span>
+					<?php
+					if ( ! empty( $faq_heading ) ) {
+						echo esc_html( $faq_heading );
+					} else {
+						echo esc_html__( 'Frequently Asked Questions', 'product-faq-for-woocommerce' );
+					}
+					?>
+				</span>
+				<?php if ( ! $is_inside_tab && 'disable' !== get_option( 'woo_faq_show_count_badge', 'enable' ) ) : ?>
+					<span class="woo-faq-count-badge"><span class="woo-faq-count-paren">(</span><?php echo intval( count( $faqs ) ); ?><span class="woo-faq-count-paren">)</span></span>
+				<?php endif; ?>
 			</h2>
 			<?php
 			foreach ( $faqs as $key => $faq ) :
@@ -384,26 +423,27 @@ class FaqHtml {
 	 * @return array<string, mixed>
 	 */
 	public function addProductFaqTab( $tabs ) {
-		if ( ! function_exists( 'is_product' ) || ! is_product() ) {
+		$product_id = $this->resolveCurrentProductId();
+		if ( $product_id <= 0 ) {
 			return $tabs;
 		}
 
-		$product_id = get_the_ID();
-		$resolved   = $this->get_product_resolved_faqs( $product_id );
+		$resolved = $this->get_product_resolved_faqs( $product_id );
 
 		if ( empty( $resolved['faqs'] ) ) {
 			return $tabs;
 		}
 
 		$faq_heading = trim( (string) get_option( 'faq_heading', '' ) );
-		$tab_title   = '' !== $faq_heading ? $faq_heading : __( 'FAQs', 'product-faq-for-woocommerce' );
+		$base_title  = '' !== $faq_heading ? $faq_heading : __( 'FAQs', 'product-faq-for-woocommerce' );
+		$tab_title   = esc_html( $base_title );
 
 		if ( 'disable' !== get_option( 'woo_faq_show_count_badge', 'enable' ) ) {
-			$tab_title .= ' (' . count( $resolved['faqs'] ) . ')';
+			$tab_title .= ' <span class="woo-faq-count-badge"><span class="woo-faq-count-paren">(</span>' . intval( count( $resolved['faqs'] ) ) . '<span class="woo-faq-count-paren">)</span></span>';
 		}
 
 		$tabs['product_faq_tab'] = [
-			'title'    => esc_html( $tab_title ),
+			'title'    => $tab_title,
 			'priority' => 50,
 			'callback' => [ $this, 'rendeTabFaqHtml' ],
 		];
@@ -417,7 +457,7 @@ class FaqHtml {
 	 * @return void
 	 */
 	public function rendeTabFaqHtml() {
-		$this->rendeFaqHtml();
+		$this->rendeFaqHtml( 0, '', '', false, true );
 	}
 
 	/**

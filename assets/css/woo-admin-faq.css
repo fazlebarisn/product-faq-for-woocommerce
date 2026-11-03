@@ -595,3 +595,24 @@ button.faq-add-question.button.button-primary {
 }
 
 
+/* ==========================================================================
+   WooCommerce Product Data -> FAQ Tab Live Count Badge
+   ========================================================================== */
+#woocommerce-product-data ul.wc-tabs li.frequently_asked_questions_tab a span b.woo-faq-admin-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: #4f46e5;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(79, 70, 229, 0.25);
+}

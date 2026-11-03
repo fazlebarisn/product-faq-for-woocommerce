@@ -1,6 +1,12 @@
 (function ($) {
   $(document).ready(function () {
     const isProActive = typeof wooFaqPro !== 'undefined' && wooFaqPro.is_pro;
+    const showCountBadge = (typeof wooFaqPro === 'undefined' || typeof wooFaqPro.show_count_badge === 'undefined')
+      ? true
+      : Boolean(wooFaqPro.show_count_badge);
+    const ADMIN_TAB_LABEL = (typeof wooFaqPro !== 'undefined' && wooFaqPro.tab_label)
+      ? wooFaqPro.tab_label
+      : 'FAQ';
     const UPGRADE_URL = (typeof wooFaqPro !== 'undefined' && wooFaqPro.upgrade_url)
       ? wooFaqPro.upgrade_url
       : 'https://fbsfusion.com/plugins/?utm_source=product-faq-for-woocommerce&utm_medium=wp-admin&utm_campaign=pro-upgrade&utm_content=limit-reached-button#product-faq';
@@ -11,19 +17,63 @@
     // Initialize FAQ counter based on existing FAQs
     var faqCounter = $("div.option-group-wrapper .options_group").length;
 
-    // Disable the add button on page load if limit is reached
-    if ($("div.option-group-wrapper .options_group").length >= MAX_SINGLE_FAQS) {
-      const $btn = $(".faq-add-question");
-      const $newBtn = $('<a href="' + UPGRADE_URL + '" target="_blank" rel="noopener noreferrer" class="button fbs-upgrade-button" style="background-color: #ff9800; border-color: #ff9800; color: #fff;">Upgrade</a>');
-      $btn.replaceWith($newBtn);
+    function syncSingleFaqLimitButton() {
+      const currentRows = $("div.option-group-wrapper .options_group").length;
+      if (currentRows >= MAX_SINGLE_FAQS) {
+        const $btn = $(".faq-product-toolbar .faq-add-question, .faq-add-question");
+        if ($btn.length) {
+          const $newBtn = $('<a href="' + UPGRADE_URL + '" target="_blank" rel="noopener noreferrer" class="button fbs-upgrade-button" style="background-color: #ff9800; border-color: #ff9800; color: #fff;">Upgrade</a>');
+          $btn.replaceWith($newBtn);
+        }
+      } else {
+        const $upgradeBtn = $(".faq-product-toolbar .fbs-upgrade-button");
+        if ($upgradeBtn.length) {
+          const $newBtn = $('<button type="button" class="faq-add-question button button-primary"><span class="dashicons dashicons-plus-alt2" style="font-size: 16px; line-height: 26px; vertical-align: middle;"></span> Add New FAQ</button>');
+          $upgradeBtn.replaceWith($newBtn);
+        }
+      }
     }
 
+    function updateAdminFaqTabBadge() {
+      const $tabSpan = $("#woocommerce-product-data ul.wc-tabs li.frequently_asked_questions_tab a span");
+      if (!$tabSpan.length) {
+        return;
+      }
+
+      if (!showCountBadge) {
+        $tabSpan.text(ADMIN_TAB_LABEL);
+        return;
+      }
+
+      let filledCount = 0;
+      $("div.option-group-wrapper .options_group").each(function () {
+        const qVal = ($(this).find(".faq-question-box").val() || "").trim();
+        const aVal = ($(this).find(".faq-answer-box").val() || "").trim();
+        if (qVal !== "" || aVal !== "") {
+          filledCount++;
+        }
+      });
+
+      const safeLabel = $("<div>").text(ADMIN_TAB_LABEL).html();
+      if (filledCount > 0) {
+        $tabSpan.html(safeLabel + ' <b class="woo-faq-admin-tab-badge">' + filledCount + '</b>');
+      } else {
+        $tabSpan.text(ADMIN_TAB_LABEL);
+      }
+    }
+
+    // Initialize button state & live tab count badge on page load
+    syncSingleFaqLimitButton();
+    updateAdminFaqTabBadge();
+
+    $(document.body).on("input change", ".faq-question-box, .faq-answer-box", function () {
+      updateAdminFaqTabBadge();
+    });
+
     $(document.body).on("click", ".faq-add-question", function () {
-      const $addBtn = $(this);
       const currentFaqs = $("div.option-group-wrapper .options_group").length;
       if (currentFaqs >= MAX_SINGLE_FAQS) {
-        const $newBtn = $('<a href="' + UPGRADE_URL + '" target="_blank" rel="noopener noreferrer" class="button fbs-upgrade-button" style="background-color: #ff9800; border-color: #ff9800; color: #fff;">Upgrade</a>');
-        $addBtn.replaceWith($newBtn);
+        syncSingleFaqLimitButton();
         alert("Upgrade to Product FAQ Pro to add more than 3 FAQs per product.");
         return;
       }
@@ -49,24 +99,14 @@
       $("div.option-group-wrapper").append(myElement);
       faqCounter++;
 
-      if ($("div.option-group-wrapper .options_group").length < MAX_SINGLE_FAQS) {
-        const $upgradeBtn = $(".fbs-upgrade-button");
-        if ($upgradeBtn.length) {
-          const $newBtn = $('<button type="button" class="button faq-add-question">Add Question</button>');
-          $upgradeBtn.replaceWith($newBtn);
-        }
-      }
+      syncSingleFaqLimitButton();
+      updateAdminFaqTabBadge();
     });
 
     $(document.body).on("click", ".faq-remove-question", function () {
       $(this).closest(".options_group").remove();
-      if ($("div.option-group-wrapper .options_group").length < MAX_SINGLE_FAQS) {
-        const $upgradeBtn = $(".fbs-upgrade-button");
-        if ($upgradeBtn.length) {
-          const $newBtn = $('<button type="button" class="button faq-add-question">Add Question</button>');
-          $upgradeBtn.replaceWith($newBtn);
-        }
-      }
+      syncSingleFaqLimitButton();
+      updateAdminFaqTabBadge();
     });
 
     // Archive FAQ code start here
@@ -303,6 +343,8 @@
         $("div.option-group-wrapper").append(myElement);
         faqCounter++;
       }
+      syncSingleFaqLimitButton();
+      updateAdminFaqTabBadge();
       return true;
     }
 

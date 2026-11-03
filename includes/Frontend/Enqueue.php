@@ -13,7 +13,10 @@ class Enqueue {
 	}
 
 	public function enqueue() {
-		wp_enqueue_style( 'faqstyle', WOO_FAQ_URL . '/assets/css/woo-faq.css', [], WOO_FAQ_VERSION, 'all' );
-		wp_enqueue_script( 'faqscript', WOO_FAQ_URL . '/assets/js/woo-faq.js', [ 'jquery' ], WOO_FAQ_VERSION, true );
+		$front_css_ver = file_exists( WOO_FAQ_PATH . '/assets/css/woo-faq.css' ) ? WOO_FAQ_VERSION . '.' . filemtime( WOO_FAQ_PATH . '/assets/css/woo-faq.css' ) : WOO_FAQ_VERSION;
+		$front_js_ver  = file_exists( WOO_FAQ_PATH . '/assets/js/woo-faq.js' ) ? WOO_FAQ_VERSION . '.' . filemtime( WOO_FAQ_PATH . '/assets/js/woo-faq.js' ) : WOO_FAQ_VERSION;
+
+		wp_enqueue_style( 'faqstyle', WOO_FAQ_URL . '/assets/css/woo-faq.css', [], $front_css_ver, 'all' );
+		wp_enqueue_script( 'faqscript', WOO_FAQ_URL . '/assets/js/woo-faq.js', [ 'jquery' ], $front_js_ver, true );
 	}
 }
