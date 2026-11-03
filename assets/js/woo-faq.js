@@ -1,21 +1,17 @@
-;(function($){
-    $(document).ready(function(){
-        const items = document.querySelectorAll(".accordion button");
+;(function ($) {
+	$(document).on('click', '.accordion .accordion-item > button', function () {
+		var $btn = $(this);
+		var isExpanded = $btn.attr('aria-expanded') === 'true';
+		var $scope = $btn.closest('.woo-faq-container, .woo-faq-archive-container');
 
-        function toggleAccordion() {
-          const itemToggle = this.getAttribute('aria-expanded');
-          
-          for (i = 0; i < items.length; i++) {
-            items[i].setAttribute('aria-expanded', 'false');
-          }
-          
-          if (itemToggle == 'false') {
-            this.setAttribute('aria-expanded', 'true');
-          }
-        }
-        
-        items.forEach(item => item.addEventListener('click', toggleAccordion));
+		if ($scope.length) {
+			$scope.find('.accordion .accordion-item > button').attr('aria-expanded', 'false');
+		} else {
+			$('.accordion .accordion-item > button').attr('aria-expanded', 'false');
+		}
 
-      }
-    );
+		if (!isExpanded) {
+			$btn.attr('aria-expanded', 'true');
+		}
+	});
 })(jQuery);

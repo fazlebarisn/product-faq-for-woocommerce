@@ -1,20 +1,22 @@
 {
-    "name": "sony/woo-product-faq",
-    "description": "A WordPress plugin",
+    "name": "fbsfusion/product-faq-for-woocommerce",
+    "description": "Product FAQ for WooCommerce — Tab, Accordion & AI FAQ Generator",
     "type": "wordpress-plugin",
-    "license": "GPLv2",
+    "homepage": "https://fbsfusion.com/",
+    "license": "GPL-2.0-or-later",
     "autoload": {
         "psr-4": {
             "Woo\\Faq\\": "includes/"
         },
-        "files":[]
+        "files": []
     },
     "authors": [
         {
             "name": "Fazle Bari",
-            "email": "fazlebarisn@gmail.com"
+            "email": "fazle@fbsfusion.com",
+            "homepage": "https://fbsfusion.com/"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require": {}
 }

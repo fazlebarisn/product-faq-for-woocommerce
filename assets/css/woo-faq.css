@@ -1,4 +1,4 @@
-/* Product FAQ for WooCommerce - Frontend Accordion Styles (Single Product & [woo_product_faq] Shortcode) */
+/* Product FAQ for WooCommerce - Frontend Accordion Styles (Single Product, Gutenberg Block & [woo_product_faq] Shortcode) */
 
 .woo-faq-container {
   width: 100%;
@@ -151,7 +151,7 @@ body .accordion .accordion-item > button:focus {
 .woo-faq-archive-container .accordion button[aria-expanded='true'] + .accordion-content,
 .accordion button[aria-expanded='true'] + .accordion-content {
   opacity: 1;
-  max-height: 2000px;
+  max-height: 2500px;
   transition: max-height 0.35s ease, opacity 0.25s ease;
   will-change: opacity, max-height;
 }
@@ -167,13 +167,52 @@ body .accordion .accordion-item > button:focus {
   will-change: opacity, max-height;
 }
 
+.single-product .accordion .accordion-content .accordion-answer,
+.woo-faq-container .accordion .accordion-content .accordion-answer,
+.woo-faq-archive-container .accordion .accordion-content .accordion-answer,
+.accordion .accordion-content .accordion-answer {
+  padding: 0.9em 0 1.2em;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.65;
+  word-break: break-word;
+}
+
 .single-product .accordion .accordion-content p,
 .woo-faq-container .accordion .accordion-content p,
 .woo-faq-archive-container .accordion .accordion-content p,
 .accordion .accordion-content p {
-  font-size: 1rem;
-  font-weight: 300;
-  margin: 1.2em 0;
-  line-height: 1.6;
+  font-size: inherit;
+  color: inherit;
+  font-weight: inherit;
+  margin: 0 0 0.85em 0;
+  line-height: 1.65;
   word-break: break-word;
+}
+
+.accordion .accordion-content .accordion-answer p:last-child {
+  margin-bottom: 0;
+}
+
+.accordion .accordion-content .accordion-answer ul,
+.accordion .accordion-content .accordion-answer ol {
+  margin: 0.5em 0 0.85em 1.4em;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+.accordion .accordion-content .accordion-answer li {
+  margin-bottom: 0.35em;
+  line-height: 1.6;
+}
+
+.accordion .accordion-content .accordion-answer a {
+  color: #0284c7;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.accordion .accordion-content .accordion-answer a:hover {
+  color: #0369a1;
 }

@@ -1,2 +1,5 @@
-# Product FAQ for WooCommerce - A WooCommerce Product Plugin to add FAQ
-Product FAQ for WooCommerce helps you to add frequently asked questions on single product page. Your customer can know some common questions answered. It will help them to understand to product better
+# Product FAQ for WooCommerce — Tab, Accordion & AI FAQ Generator
+
+Boost WooCommerce conversions and Google Rich Results with responsive Product FAQ tabs, a native Gutenberg Block (`/faq`), rich HTML answers, Google `FAQPage` JSON-LD schema, 1-click JSON backup/migration, and spec-aware AI FAQ generation.
+
+Developed and maintained by **[FBS Fusion](https://fbsfusion.com/)**.

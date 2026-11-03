@@ -1,17 +1,20 @@
 (function ($) {
   $(document).ready(function () {
     const isProActive = typeof wooFaqPro !== 'undefined' && wooFaqPro.is_pro;
+    const UPGRADE_URL = (typeof wooFaqPro !== 'undefined' && wooFaqPro.upgrade_url)
+      ? wooFaqPro.upgrade_url
+      : 'https://fbsfusion.com/plugins/?utm_source=product-faq-for-woocommerce&utm_medium=wp-admin&utm_campaign=pro-upgrade&utm_content=limit-reached-button#product-faq';
     const MAX_SINGLE_FAQS = isProActive ? Infinity : 3;
     const MAX_GROUPS_FREE = isProActive ? Infinity : 2;
     const MAX_FAQS_FREE = isProActive ? Infinity : 3;
 
     // Initialize FAQ counter based on existing FAQs
     var faqCounter = $("div.option-group-wrapper .options_group").length;
-    
+
     // Disable the add button on page load if limit is reached
     if ($("div.option-group-wrapper .options_group").length >= MAX_SINGLE_FAQS) {
       const $btn = $(".faq-add-question");
-      const $newBtn = $('<a href="https://wpbay.com/product/product-faq-for-woocommerce-pro/" target="_blank" class="button fbs-upgrade-button" style="background-color: #ff9800; border-color: #ff9800; color: #fff;">Upgrade</a>');
+      const $newBtn = $('<a href="' + UPGRADE_URL + '" target="_blank" rel="noopener noreferrer" class="button fbs-upgrade-button" style="background-color: #ff9800; border-color: #ff9800; color: #fff;">Upgrade</a>');
       $btn.replaceWith($newBtn);
     }
 
@@ -19,16 +22,14 @@
       const $addBtn = $(this);
       const currentFaqs = $("div.option-group-wrapper .options_group").length;
       if (currentFaqs >= MAX_SINGLE_FAQS) {
-        const $newBtn = $('<a href="https://wpbay.com/product/product-faq-for-woocommerce-pro/" target="_blank" class="button fbs-upgrade-button" style="background-color: #ff9800; border-color: #ff9800; color: #fff;">Upgrade</a>');
+        const $newBtn = $('<a href="' + UPGRADE_URL + '" target="_blank" rel="noopener noreferrer" class="button fbs-upgrade-button" style="background-color: #ff9800; border-color: #ff9800; color: #fff;">Upgrade</a>');
         $addBtn.replaceWith($newBtn);
-        alert("Upgrade to the Pro version to add more than 3 FAQs per product.");
+        alert("Upgrade to Product FAQ Pro to add more than 3 FAQs per product.");
         return;
       }
 
-      // Use the current counter value for the new FAQ
       var faqNumber = faqCounter;
 
-      // Use template literals for better readability
       var myElement = `
               <div class="options_group faq-group" data-index="${faqNumber}">
                   <button type="button" class="faq-remove-question" style="float:right; margin-top:5px; background:#fff; color:#b32d2e; border:1px solid #b32d2e; border-radius:50%; width:24px; height:24px; padding:0; cursor:pointer;">
@@ -40,18 +41,14 @@
                   </p>
                   <p class="form-field faq_ans_${faqNumber}_field">
                       <label for="faq_ans_${faqNumber}">Answer ${faqNumber + 1}</label>
-                      <textarea class="faq_input faq-answer-box" name="faq[answer][${faqNumber}]" id="faq_ans_${faqNumber}" rows="3" placeholder="Enter your answer here..." style="width: 97%;"></textarea>
+                      <textarea class="faq_input faq-answer-box" name="faq[answer][${faqNumber}]" id="faq_ans_${faqNumber}" rows="3" placeholder="Enter your answer here (HTML links, bold/italic, lists & line breaks supported)..." style="width: 97%;"></textarea>
                   </p>
               </div>
           `;
 
-      // Append the new FAQ input fields
       $("div.option-group-wrapper").append(myElement);
-
-      // Increment the counter for the next click
       faqCounter++;
 
-      // Restore the add button if under the limit (in case FAQs are removed)
       if ($("div.option-group-wrapper .options_group").length < MAX_SINGLE_FAQS) {
         const $upgradeBtn = $(".fbs-upgrade-button");
         if ($upgradeBtn.length) {
@@ -61,29 +58,23 @@
       }
     });
 
-    // If you have a remove FAQ handler for single product, add this logic there as well:
-          // After removing an FAQ, restore the add button if under the limit
-      $(document.body).on("click", ".faq-remove-question", function () {
-        $(this).closest(".options_group").remove();
-        // Restore the add button if under the limit
-        if ($("div.option-group-wrapper .options_group").length < MAX_SINGLE_FAQS) {
-          const $upgradeBtn = $(".fbs-upgrade-button");
-          if ($upgradeBtn.length) {
-            const $newBtn = $('<button type="button" class="button faq-add-question">Add Question</button>');
-            $upgradeBtn.replaceWith($newBtn);
-          }
+    $(document.body).on("click", ".faq-remove-question", function () {
+      $(this).closest(".options_group").remove();
+      if ($("div.option-group-wrapper .options_group").length < MAX_SINGLE_FAQS) {
+        const $upgradeBtn = $(".fbs-upgrade-button");
+        if ($upgradeBtn.length) {
+          const $newBtn = $('<button type="button" class="button faq-add-question">Add Question</button>');
+          $upgradeBtn.replaceWith($newBtn);
         }
-      });
+      }
+    });
 
     // Archive FAQ code start here
-
     $(document.body).on("click", ".fbs-add-faq-group", function () {
-      const currentGroups = $(
-        "#faq-groups-container .fbs-faq-archive-group"
-      ).length;
+      const currentGroups = $("#faq-groups-container .fbs-faq-archive-group").length;
 
       if (currentGroups >= MAX_GROUPS_FREE) {
-        alert("Upgrade to the Pro version to add more than 2 FAQ groups.");
+        alert("Upgrade to Product FAQ Pro to add more than 2 FAQ groups.");
         return;
       }
 
@@ -93,10 +84,9 @@
         .replace(/_INDEX_/g, groupIndex);
       $("#faq-groups-container").append(groupHtml);
 
-      // Disable the add group button if max reached
       if (groupIndex + 1 >= MAX_GROUPS_FREE) {
         const $btn = $(".fbs-add-faq-group");
-        const $newBtn = $('<a href="https://wpbay.com/product/product-faq-for-woocommerce-pro/" target="_blank" class="button fbs-upgrade-button" style="background-color: #ff9800; border-color: #ff9800; color: #fff;">Upgrade</a>');
+        const $newBtn = $('<a href="' + UPGRADE_URL + '" target="_blank" rel="noopener noreferrer" class="button fbs-upgrade-button" style="background-color: #ff9800; border-color: #ff9800; color: #fff;">Upgrade</a>');
         $btn.replaceWith($newBtn);
       }
     });
@@ -108,9 +98,7 @@
       function () {
         $(this).closest(".fbs-faq-archive-group").remove();
 
-        const currentGroups = $(
-          "#faq-groups-container .fbs-faq-archive-group"
-        ).length;
+        const currentGroups = $("#faq-groups-container .fbs-faq-archive-group").length;
 
         if (currentGroups < MAX_GROUPS_FREE) {
           const $upgradeBtn = $(".fbs-upgrade-button");
@@ -131,9 +119,7 @@
         const currentFaqs = groupEl.find(".fbs-archive-faq-item").length;
 
         if (currentFaqs >= MAX_FAQS_FREE) {
-          alert(
-            "Upgrade to the Pro version to add more than 3 FAQs per group."
-          );
+          alert("Upgrade to Product FAQ Pro to add more than 3 FAQs per group.");
           return;
         }
 
@@ -146,10 +132,9 @@
 
         groupEl.find(".fbs-archive-faq-items").append(faqTemplate);
 
-        // Disable the button if max reached
         if (faqIndex + 1 >= MAX_FAQS_FREE) {
           const $btn = groupEl.find(".fsb-archive-add-faq-item");
-          const $newBtn = $('<a href="https://wpbay.com/product/product-faq-for-woocommerce-pro/" target="_blank" class="button fbs-upgrade-button" style="background-color: #ff9800; border-color: #ff9800; color: #fff;">Upgrade</a>');
+          const $newBtn = $('<a href="' + UPGRADE_URL + '" target="_blank" rel="noopener noreferrer" class="button fbs-upgrade-button" style="background-color: #ff9800; border-color: #ff9800; color: #fff;">Upgrade</a>');
           $btn.replaceWith($newBtn);
         }
       }
@@ -178,10 +163,8 @@
     $(document.body).on("click", ".fbs-upgrade-button", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      window.open("https://wpbay.com/product/product-faq-for-woocommerce-pro/", "_blank");
+      window.open(UPGRADE_URL, "_blank", "noopener,noreferrer");
     });
-
-
 
     // Delegate input event on term field
     $("#faq-groups-container").on("focus", ".archive-term", function () {
@@ -290,7 +273,7 @@
           $q.val(questionText);
           $a.val(answerText);
           filled = true;
-          return false; // break
+          return false;
         }
       });
 
@@ -329,7 +312,7 @@
 
       const tmpl = FAQ_PRESET_TEMPLATES[templateKey];
       appendOrFillFaq(tmpl.q, tmpl.a);
-      $(this).val(""); // reset select
+      $(this).val("");
     });
 
     // AI Modal Handlers
@@ -347,6 +330,7 @@
       const $spinner = $btn.find(".faq-ai-spinner");
       const $text = $btn.find(".faq-ai-btn-text");
 
+      const productId = $("#post_ID").val() || $("input[name='post_ID']").val() || 0;
       const title = $("#title").val() || $("input[name='post_title']").val() || "";
       let desc = "";
       if (typeof tinyMCE !== "undefined" && tinyMCE.get("content")) {
@@ -370,6 +354,7 @@
         data: {
           action: "woo_faq_generate_ai_faqs",
           nonce: typeof faqAjax !== "undefined" ? faqAjax.nonce : "",
+          product_id: productId,
           product_title: title,
           product_desc: desc,
           tone: tone,
@@ -388,14 +373,16 @@
               $("#faq-ai-notice").hide();
             }
 
-            faqs.forEach(function (faq, idx) {
+            faqs.forEach(function (faq) {
+              const safeQ = $("<div>").text(faq.question || "").html();
+              const safeA = $("<div>").text(faq.answer || "").html();
               const itemHtml = `
                 <div class="fbs-ai-item-card">
                   <label class="fbs-ai-item-label">
-                    <input type="checkbox" class="faq-ai-select-checkbox" checked data-q="${$("<div>").text(faq.question).html()}" data-a="${$("<div>").text(faq.answer).html()}">
+                    <input type="checkbox" class="faq-ai-select-checkbox" checked data-q="${safeQ}" data-a="${safeA}">
                     <div class="fbs-ai-item-content">
-                      <strong class="fbs-ai-item-q">${faq.question}</strong>
-                      <p class="fbs-ai-item-a">${faq.answer}</p>
+                      <strong class="fbs-ai-item-q">${safeQ}</strong>
+                      <p class="fbs-ai-item-a">${safeA}</p>
                     </div>
                   </label>
                 </div>

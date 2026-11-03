@@ -3,18 +3,17 @@
 namespace Woo\Faq;
 
 if ( ! defined( 'ABSPATH' ) ) {
-    exit;
+	exit;
 }
 
-class Admin{
+class Admin {
 
-    function __construct()
-    {
-        new Admin\Menu();
-        new Admin\Enqueue();
-        new Admin\AdminNotice();
-        new Admin\ProductDataTab();
-        new Admin\AiEngine();
-    }
-    
+	public function __construct() {
+		new Admin\Menu();
+		new Admin\Enqueue();
+		new Admin\AdminNotice();
+		new Admin\ProductDataTab();
+		new Admin\AiEngine();
+		new Admin\Tools();
+	}
 }
