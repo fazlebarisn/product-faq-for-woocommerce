@@ -18,8 +18,8 @@ $hire_us_url    = woo_faq_utm_url( 'hire-us/', 'agency-services', 'settings-foot
 
 		<div class="woo-faq-settings-wrap">
 			<div class="woo-faq-settings-nav">
-				<button type="button" class="nav-tab" data-target="tab-general"><?php esc_html_e( 'General', 'product-faq-for-woocommerce' ); ?></button>
-				<button type="button" class="nav-tab" data-target="tab-design"><?php esc_html_e( 'Design', 'product-faq-for-woocommerce' ); ?></button>
+				<button type="button" class="nav-tab" data-target="tab-general"><?php esc_html_e( '⚙️ General', 'product-faq-for-woocommerce' ); ?></button>
+				<button type="button" class="nav-tab" data-target="tab-design"><?php esc_html_e( '🎨 Design', 'product-faq-for-woocommerce' ); ?></button>
 				<button type="button" class="nav-tab" data-target="tab-ai"><?php esc_html_e( '🤖 AI Assistant', 'product-faq-for-woocommerce' ); ?></button>
 				<button type="button" class="nav-tab" data-target="tab-tools"><?php esc_html_e( '💾 Backup & Tools', 'product-faq-for-woocommerce' ); ?></button>
 				<?php do_action( 'woo_faq_settings_tabs' ); ?>
@@ -31,7 +31,7 @@ $hire_us_url    = woo_faq_utm_url( 'hire-us/', 'agency-services', 'settings-foot
 
 			<div class="woo-faq-settings-content">
 				<div id="tab-general" class="tab-content">
-					<h2><?php esc_html_e( 'General Settings', 'product-faq-for-woocommerce' ); ?></h2>
+					<h2><?php esc_html_e( '⚙️ General Settings', 'product-faq-for-woocommerce' ); ?></h2>
 					<table class="form-table">
 						<tr valign="top">
 							<th scope="row"><?php esc_html_e( 'Product FAQ', 'product-faq-for-woocommerce' ); ?></th>
@@ -98,7 +98,7 @@ $hire_us_url    = woo_faq_utm_url( 'hire-us/', 'agency-services', 'settings-foot
 				</div>
 
 				<div id="tab-design" class="tab-content">
-					<h2><?php esc_html_e( 'Design Settings', 'product-faq-for-woocommerce' ); ?></h2>
+					<h2><?php esc_html_e( '🎨 Design Settings', 'product-faq-for-woocommerce' ); ?></h2>
 					<table class="form-table">
 						<tr valign="top">
 							<th scope="row"><?php esc_html_e( 'Heading Font Color', 'product-faq-for-woocommerce' ); ?></th>

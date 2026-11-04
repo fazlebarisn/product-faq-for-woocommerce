@@ -6,7 +6,7 @@ Tested up to: 7.1
 WC requires at least: 5.0
 WC tested up to: 11.1.0
 Requires PHP: 7.3
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -100,6 +100,12 @@ Yes! Open **Product FAQ ➔ Settings ➔ 💾 Backup & Tools** to export all plu
 
 == Changelog ==
 
+= 1.6.1 =
+* **Fixed**: Live FAQ Count Badge (`FAQ (N)` / `FAQs (N)`) detection across WooCommerce Block Themes, page builders, and the backend `Product Data ➔ FAQ` tab (updates live as questions are added, generated with AI, inserted from templates, or deleted).
+* **Added**: Consistent navigation icons (`⚙️ General` and `🎨 Design`) and matching section headers in `Product FAQ ➔ Settings`.
+* **Improved**: Scoped settings panel heading styles (`.tab-content > h2`) to prevent visual overlap on nested dashboard cards and analytics tables.
+* **Improved**: Added developer extensibility filters (`woo_faq_ai_max_count`, `woo_faq_exportable_option_keys`) and custom taxonomy term selector support in Bulk FAQs.
+
 = 1.6.0 =
 * **New**: Native Gutenberg Block (`Product FAQ Accordion` / `woo-faq/product-faq`) with live editor preview and Inspector controls for Custom Heading, Product ID, and Category Slug.
 * **New**: Rich HTML & Multi-Paragraph FAQ Answers — Support clickable links (`<a>`), bold/italic text, bulleted/numbered lists, and automatic paragraph formatting (`wpautop` + `wp_kses_post`) in both Single Product and Bulk FAQs while keeping JSON-LD schema clean.
@@ -180,6 +186,9 @@ Yes! Open **Product FAQ ➔ Settings ➔ 💾 Backup & Tools** to export all plu
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.6.1 =
+Fixes the live FAQ Count Badge across WooCommerce Block Themes and the backend Product Data FAQ tab, polishes Settings tab icons and card heading styles, and adds extensibility hooks.
 
 = 1.6.0 =
 Major Free Upgrade: Adds a native Gutenberg Block (/faq), Rich HTML & clickable links in FAQ answers, live Product Tab count badges (`FAQs (5)`), Auto-Expand First FAQ toggle, WooCommerce Spec-Aware AI generation, and 1-Click JSON Backup Export/Import!

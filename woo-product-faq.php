@@ -4,7 +4,7 @@
  * Requires Plugins:     woocommerce
  * Plugin URI:           https://fbsfusion.com/plugins/
  * Description:          Boost WooCommerce conversions and Google Rich Results with responsive Product FAQ tabs, Gutenberg blocks, rich HTML answers, FAQPage JSON-LD schema, and spec-aware AI FAQ generation.
- * Version:              1.6.0
+ * Version:              1.6.1
  * Author:               Fazle Bari
  * Author URI:           https://fbsfusion.com/
  * Requires PHP:         7.3
@@ -39,7 +39,7 @@ final class WooFaq {
 	/**
 	 * Plugin version.
 	 */
-	const version = '1.6.0';
+	const version = '1.6.1';
 
 	/**
 	 * Class constructor.
