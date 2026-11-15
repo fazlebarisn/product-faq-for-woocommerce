@@ -37,8 +37,11 @@ class Menu {
 			return;
 		}
 
-		wp_enqueue_style( 'woo-faq-admin-settings', WOO_FAQ_URL . '/assets/css/admin-settings.css', [], WOO_FAQ_VERSION );
-		wp_enqueue_script( 'woo-faq-admin-settings', WOO_FAQ_URL . '/assets/js/admin-settings.js', [ 'jquery' ], WOO_FAQ_VERSION, true );
+		$settings_css_ver = file_exists( WOO_FAQ_PATH . '/assets/css/admin-settings.css' ) ? WOO_FAQ_VERSION . '.' . filemtime( WOO_FAQ_PATH . '/assets/css/admin-settings.css' ) : WOO_FAQ_VERSION;
+		$settings_js_ver  = file_exists( WOO_FAQ_PATH . '/assets/js/admin-settings.js' ) ? WOO_FAQ_VERSION . '.' . filemtime( WOO_FAQ_PATH . '/assets/js/admin-settings.js' ) : WOO_FAQ_VERSION;
+
+		wp_enqueue_style( 'woo-faq-admin-settings', WOO_FAQ_URL . '/assets/css/admin-settings.css', [], $settings_css_ver );
+		wp_enqueue_script( 'woo-faq-admin-settings', WOO_FAQ_URL . '/assets/js/admin-settings.js', [ 'jquery' ], $settings_js_ver, true );
 		wp_localize_script(
 			'woo-faq-admin-settings',
 			'faqAjax',

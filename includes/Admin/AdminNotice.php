@@ -15,6 +15,96 @@ class AdminNotice {
 
 		// Show review request notice after 7 days ONLY on Product FAQ & WooCommerce product screens.
 		add_action( 'admin_notices', [ $this, 'review_request_notice' ] );
+		add_action( 'admin_notices', [ $this, 'legacy_ai_connector_notice' ] );
+
+		// Register AJAX dismissal handlers.
+		add_action( 'wp_ajax_woo_faq_dismiss_review_notice', [ $this, 'ajax_dismiss_review_notice' ] );
+		add_action( 'wp_ajax_woo_faq_dismiss_ai_connector_notice', [ $this, 'ajax_dismiss_ai_connector_notice' ] );
+	}
+
+	/**
+	 * Persist review notice dismissal for the current administrator.
+	 *
+	 * @since 1.6.2
+	 * @return void
+	 */
+	public function ajax_dismiss_review_notice() {
+		check_ajax_referer( 'woo_faq_dismiss_review_notice', 'nonce' );
+		if ( current_user_can( 'manage_options' ) ) {
+			update_user_meta( get_current_user_id(), 'woo_faq_review_notice_dismissed', '1' );
+		}
+		wp_send_json_success();
+	}
+
+	/**
+	 * Persist legacy AI key -> WordPress Connectors reminder dismissal.
+	 *
+	 * @since 1.6.2
+	 * @return void
+	 */
+	public function ajax_dismiss_ai_connector_notice() {
+		check_ajax_referer( 'woo_faq_dismiss_ai_connector_notice', 'nonce' );
+		if ( current_user_can( 'manage_options' ) ) {
+			update_user_meta( get_current_user_id(), 'woo_faq_ai_connector_notice_dismissed', '1' );
+		}
+		wp_send_json_success();
+	}
+
+	/**
+	 * Friendly one-time notice for stores upgrading from older versions with `woo_faq_ai_api_key`,
+	 * guiding them to configure WordPress Settings -> Connectors.
+	 *
+	 * @since 1.6.2
+	 * @return void
+	 */
+	public function legacy_ai_connector_notice() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$legacy_key = get_option( 'woo_faq_ai_api_key', '' );
+		if ( empty( $legacy_key ) ) {
+			return;
+		}
+
+		if ( get_user_meta( get_current_user_id(), 'woo_faq_ai_connector_notice_dismissed', true ) ) {
+			return;
+		}
+
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen || ( false === strpos( (string) $screen->id, 'woo_' ) && ! in_array( $screen->id, [ 'product', 'edit-product' ], true ) ) ) {
+			return;
+		}
+
+		$ai_ready = class_exists( '\Woo\Faq\Admin\AiEngine' ) && method_exists( '\Woo\Faq\Admin\AiEngine', 'isWpAiReady' )
+			? \Woo\Faq\Admin\AiEngine::isWpAiReady()
+			: false;
+		if ( $ai_ready ) {
+			return;
+		}
+
+		$connectors_url = admin_url( 'options-connectors.php' );
+		$settings_url   = admin_url( 'admin.php?page=woo_sfaq#tab-ai' );
+		?>
+		<div class="notice notice-info is-dismissible woo-faq-ai-migrate-notice" style="border-left-color:#6366f1;">
+			<p>
+				<strong><?php esc_html_e( 'Product FAQ AI Assistant Upgraded:', 'product-faq-for-woocommerce' ); ?></strong>
+				<?php esc_html_e( 'Product FAQ now uses WordPress Native AI Connectors (supporting Google Gemini, OpenAI, and Anthropic Claude with zero token markups). Please connect your preferred AI key under Settings → Connectors to continue generating 1-click AI FAQs.', 'product-faq-for-woocommerce' ); ?>
+				<a href="<?php echo esc_url( $connectors_url ); ?>" class="button button-secondary" style="margin-left:8px;vertical-align:middle;"><?php esc_html_e( 'Open Settings → Connectors', 'product-faq-for-woocommerce' ); ?></a>
+				<a href="<?php echo esc_url( $settings_url ); ?>" style="margin-left:8px;vertical-align:middle;"><?php esc_html_e( 'AI Setup Guide', 'product-faq-for-woocommerce' ); ?></a>
+			</p>
+		</div>
+		<script>
+		jQuery(document).ready(function($) {
+			$('.woo-faq-ai-migrate-notice').on('click', '.notice-dismiss', function() {
+				$.post(ajaxurl, {
+					action: 'woo_faq_dismiss_ai_connector_notice',
+					nonce: '<?php echo esc_js( wp_create_nonce( 'woo_faq_dismiss_ai_connector_notice' ) ); ?>'
+				});
+			});
+		});
+		</script>
+		<?php
 	}
 
 	public function admin_notice_missing_main_plugin() {

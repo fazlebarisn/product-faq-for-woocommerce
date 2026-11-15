@@ -1,13 +1,15 @@
 <?php
 defined( 'ABSPATH' ) || die( 'Nice Try!' );
 
-$is_pro_active  = in_array( 'woo-product-faq-pro/product-faq-pro.php', apply_filters( 'active_plugins', get_option( 'active_plugins', [] ) ), true ) && ( ! function_exists( 'faq_pro_is_license_active' ) || faq_pro_is_license_active() );
-$export_url     = wp_nonce_url( admin_url( 'admin-post.php?action=woo_faq_export_json' ), 'woo_faq_export_nonce', 'woo_faq_nonce' );
-$pro_tab_url    = woo_faq_utm_url( 'plugins/', 'pro-upgrade', 'settings-pro-tab', 'product-faq' );
-$pro_field_url  = woo_faq_utm_url( 'plugins/', 'pro-upgrade', 'settings-locked-field', 'product-faq' );
-$pro_chart_url  = woo_faq_utm_url( 'plugins/', 'pro-upgrade', 'analytics-preview', 'product-faq' );
+$is_pro_active   = in_array( 'woo-product-faq-pro/product-faq-pro.php', apply_filters( 'active_plugins', get_option( 'active_plugins', [] ) ), true ) && ( ! function_exists( 'faq_pro_is_license_active' ) || faq_pro_is_license_active() );
+$woofaq_ymd      = (int) gmdate( 'Ymd' );
+$woofaq_is_bfcm  = ( $woofaq_ymd >= 20261114 && $woofaq_ymd <= 20261202 );
+$export_url      = wp_nonce_url( admin_url( 'admin-post.php?action=woo_faq_export_json' ), 'woo_faq_export_nonce', 'woo_faq_nonce' );
+$pro_tab_url     = woo_faq_utm_url( $woofaq_is_bfcm ? 'black-friday/' : 'plugins/product-faq-for-woocommerce/', $woofaq_is_bfcm ? 'bfcm-2026' : 'pro-upgrade', 'settings-pro-tab', 'product-faq' );
+$pro_field_url   = woo_faq_utm_url( 'plugins/product-faq-for-woocommerce/', 'pro-upgrade', 'settings-locked-field' );
+$pro_chart_url   = woo_faq_utm_url( $woofaq_is_bfcm ? 'black-friday/' : 'plugins/product-faq-for-woocommerce/', $woofaq_is_bfcm ? 'bfcm-2026' : 'pro-upgrade', 'analytics-preview', 'product-faq' );
 $speed_audit_url = woo_faq_utm_url( 'speed-security/', 'agency-services', 'settings-footer-audit' );
-$hire_us_url    = woo_faq_utm_url( 'hire-us/', 'agency-services', 'settings-footer-hire' );
+$hire_us_url     = woo_faq_utm_url( 'hire-us/', 'agency-services', 'settings-footer-hire' );
 ?>
 <div class="wrap fbs-faq-admin">
 	<h1><?php esc_html_e( 'Product FAQ Settings', 'product-faq-for-woocommerce' ); ?></h1>
@@ -25,7 +27,12 @@ $hire_us_url    = woo_faq_utm_url( 'hire-us/', 'agency-services', 'settings-foot
 				<?php do_action( 'woo_faq_settings_tabs' ); ?>
 				<?php if ( ! $is_pro_active ) : ?>
 					<button type="button" class="nav-tab" data-target="tab-analytics-mock"><?php esc_html_e( '📊 Analytics', 'product-faq-for-woocommerce' ); ?> <span class="nav-lock-icon" style="font-size: 10px; margin-left: 2px;">🔒</span></button>
-					<button type="button" class="nav-tab" data-target="tab-pro"><?php esc_html_e( '🚀 Pro Features', 'product-faq-for-woocommerce' ); ?></button>
+					<button type="button" class="nav-tab" data-target="tab-pro">
+						<?php esc_html_e( '🚀 Pro Features', 'product-faq-for-woocommerce' ); ?>
+						<?php if ( $woofaq_is_bfcm ) : ?>
+							<span style="display:inline-block;margin-left:4px;padding:1px 6px;border-radius:999px;background:#10b981;color:#052e16;font-size:10px;font-weight:800;vertical-align:middle;">-40%</span>
+						<?php endif; ?>
+					</button>
 				<?php endif; ?>
 			</div>
 
@@ -385,14 +392,35 @@ $hire_us_url    = woo_faq_utm_url( 'hire-us/', 'agency-services', 'settings-foot
 							</div>
 
 							<div class="pro-cta-section">
-								<h3><?php esc_html_e( 'Ready to Unlock the Complete Suite?', 'product-faq-for-woocommerce' ); ?></h3>
-								<p><?php esc_html_e( 'Visit FBS Fusion to compare Free vs Pro and explore our full WooCommerce growth & optimization suite.', 'product-faq-for-woocommerce' ); ?></p>
-								<a href="<?php echo esc_url( $pro_tab_url ); ?>" target="_blank" rel="noopener noreferrer" class="pro-cta-button">
-									<?php esc_html_e( 'Explore Product FAQ Pro on FBSFusion.com ↗', 'product-faq-for-woocommerce' ); ?>
-								</a>
+								<?php
+								$woofaq_ymd       = (int) gmdate( 'Ymd' );
+								$woofaq_is_bfcm   = ( $woofaq_ymd >= 20261112 && $woofaq_ymd <= 20261202 );
+								$woofaq_bfcm_url  = woo_faq_utm_url( 'black-friday/', 'bfcm-2026', 'settings-pro-tab', 'product-faq' );
+								$woofaq_pfaq_url  = woo_faq_utm_url( 'plugins/product-faq-for-woocommerce/', 'pro-upgrade', 'settings-pro-tab', 'product-faq' );
+								?>
+								<?php if ( $woofaq_is_bfcm ) : ?>
+									<div style="display:inline-block;margin-bottom:10px;padding:5px 14px;border-radius:999px;background:#ecfdf5;border:1px solid #34d399;color:#065f46;font-size:12.5px;font-weight:700;">
+										<?php esc_html_e( '🔥 Black Friday Deal (Nov 26 – Dec 1): 40% OFF — Just $9/yr or $29.40 One-Time Lifetime!', 'product-faq-for-woocommerce' ); ?>
+									</div>
+								<?php else : ?>
+									<div style="display:inline-block;margin-bottom:10px;padding:5px 14px;border-radius:999px;background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;font-size:12.5px;font-weight:700;">
+										<?php esc_html_e( '💎 Developer-Friendly Pricing: Starts at $15/year or $49 One-Time Lifetime!', 'product-faq-for-woocommerce' ); ?>
+									</div>
+								<?php endif; ?>
+								<h3><?php esc_html_e( 'Ready to Unlock Shopper Q&A, Bulk Category AI & Smart Search?', 'product-faq-for-woocommerce' ); ?></h3>
+								<p><?php esc_html_e( 'Compare all 1-Site, 5-Site, and 100-Site Annual & Lifetime plans with zero recurring AI token markups.', 'product-faq-for-woocommerce' ); ?></p>
+								<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:14px;">
+									<a href="<?php echo esc_url( $woofaq_is_bfcm ? $woofaq_bfcm_url : $woofaq_pfaq_url ); ?>" target="_blank" rel="noopener noreferrer" class="pro-cta-button">
+										<?php
+										echo $woofaq_is_bfcm
+											? esc_html__( '🔥 Claim 40% OFF Black Friday Pro Deal ($9/yr • $29.40 LTD) ↗', 'product-faq-for-woocommerce' )
+											: esc_html__( 'Get Product FAQ Pro ($15/yr or $49 Lifetime) ↗', 'product-faq-for-woocommerce' );
+										?>
+									</a>
+								</div>
 								<div class="pro-guarantee">
 									<span class="guarantee-icon">🛡️</span>
-									<span><?php esc_html_e( '30-day money-back guarantee • Instant download', 'product-faq-for-woocommerce' ); ?></span>
+									<span><?php esc_html_e( '30-day money-back guarantee • Instant download & license key via WPBay', 'product-faq-for-woocommerce' ); ?></span>
 								</div>
 							</div>
 						</div>

@@ -4,7 +4,7 @@
  * Requires Plugins:     woocommerce
  * Plugin URI:           https://fbsfusion.com/plugins/
  * Description:          Boost WooCommerce conversions and Google Rich Results with responsive Product FAQ tabs, Gutenberg blocks, rich HTML answers, FAQPage JSON-LD schema, and spec-aware AI FAQ generation.
- * Version:              1.6.1
+ * Version:              1.6.2
  * Author:               Fazle Bari
  * Author URI:           https://fbsfusion.com/
  * Requires PHP:         7.3
@@ -39,7 +39,7 @@ final class WooFaq {
 	/**
 	 * Plugin version.
 	 */
-	const version = '1.6.1';
+	const version = '1.6.2';
 
 	/**
 	 * Class constructor.
@@ -51,7 +51,40 @@ final class WooFaq {
 
 		register_activation_hook( __FILE__, [ $this, 'activate' ] );
 
+		add_action( 'plugins_loaded', [ $this, 'maybeMigrateLegacyDefaults' ], 5 );
 		add_action( 'plugins_loaded', [ $this, 'initPlugin' ] );
+	}
+
+	/**
+	 * Preserve legacy visual defaults (`disable` for count badge & auto-open first FAQ)
+	 * on pre-1.6.0 stores that already configured settings without explicitly setting
+	 * those new options.
+	 *
+	 * @since 1.6.2
+	 * @return void
+	 */
+	public function maybeMigrateLegacyDefaults() {
+		if ( '1' === get_option( 'woo_faq_v162_migrated' ) ) {
+			return;
+		}
+
+		$installed    = get_option( 'woo_faq_installed', false );
+		$has_position = ( false !== get_option( 'product_faq_position', false ) );
+		$prev_ver     = (string) get_option( 'woo_faq_version', '' );
+
+		$is_legacy_store = ( false !== $installed && $has_position && ( '' === $prev_ver || version_compare( $prev_ver, '1.6.0', '<' ) ) );
+
+		if ( $is_legacy_store ) {
+			if ( false === get_option( 'woo_faq_open_first', false ) ) {
+				update_option( 'woo_faq_open_first', 'disable' );
+			}
+			if ( false === get_option( 'woo_faq_show_count_badge', false ) ) {
+				update_option( 'woo_faq_show_count_badge', 'disable' );
+			}
+		}
+
+		update_option( 'woo_faq_version', WOO_FAQ_VERSION );
+		update_option( 'woo_faq_v162_migrated', '1', false );
 	}
 
 	/**

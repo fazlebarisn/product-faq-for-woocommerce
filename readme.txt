@@ -6,11 +6,11 @@ Tested up to: 7.1
 WC requires at least: 5.0
 WC tested up to: 11.1.0
 Requires PHP: 7.3
-Stable tag: 1.6.1
+Stable tag: 1.6.2
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Boost WooCommerce conversions and Google Rich Results with Product FAQ tabs, Gutenberg blocks, rich HTML answers, JSON-LD schema & spec-aware AI FAQs.
+Boost WooCommerce sales and Google Rich Results with Product FAQ tabs, Gutenberg blocks, rich HTML answers, JSON-LD schema, and spec-aware AI FAQs.
 
 == Description ==
 
@@ -36,8 +36,8 @@ Boost WooCommerce conversions and Google Rich Results with Product FAQ tabs, Gut
 * **1-Click Objection-Buster Templates**: Pre-built eCommerce templates for *Shipping & Delivery*, *Returns & Refunds*, *Warranty & Authenticity*, *Sizing & Fit*, and *Care Instructions*.
 * **WooCommerce HPOS & Cart/Checkout Blocks Compatible**: 100% compatible with High-Performance Order Storage (`custom_order_tables`) and modern block-based WooCommerce stores.
 
-= 🌟 Upgrade to Product FAQ Pro =
-Want to take your store's pre-sale conversion engine even further? Explore **[Product FAQ Pro at FBS Fusion](https://fbsfusion.com/plugins/#product-faq)**:
+= 🌟 Upgrade to Product FAQ Pro (From $15/yr or $49 Lifetime) =
+Want to take your store's pre-sale conversion engine even further? Explore **[Product FAQ Pro at FBS Fusion](https://fbsfusion.com/plugins/product-faq-for-woocommerce/)**:
 
 * **💬 Customer "Ask a Question" Q&A Portal + AI Auto-Draft**: Let shoppers submit questions directly on product pages with instant AI-drafted answers ready for 1-click approval.
 * **🔍 Live Instant FAQ Search Bar**: Real-time search filtering above your accordions so shoppers find answers in milliseconds.
@@ -99,6 +99,12 @@ Yes! Open **Product FAQ ➔ Settings ➔ 💾 Backup & Tools** to export all plu
 13. FAQ Engagement Analytics (Pro).
 
 == Changelog ==
+
+= 1.6.2 =
+* **Fixed**: Preserved legacy visual layout defaults (`disable` for tab count badge and auto-expand first FAQ) on stores upgrading from pre-1.6.0 versions that had not explicitly configured those toggles.
+* **Fixed**: Registered persistent AJAX dismissal handler for dashboard review and migration notices so dismissed notices never reappear.
+* **Added**: Helpful one-time setup reminder for legacy stores upgrading to WordPress Native AI Connectors (`Settings ➔ Connectors`).
+* **Improved**: Transparent Pro feature comparison and licensing details (`1-Site`, `5-Site`, and `100-Site` Annual & Lifetime plans).
 
 = 1.6.1 =
 * **Fixed**: Live FAQ Count Badge (`FAQ (N)` / `FAQs (N)`) detection across WooCommerce Block Themes, page builders, and the backend `Product Data ➔ FAQ` tab (updates live as questions are added, generated with AI, inserted from templates, or deleted).
@@ -186,6 +192,9 @@ Yes! Open **Product FAQ ➔ Settings ➔ 💾 Backup & Tools** to export all plu
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.6.2 =
+Preserves legacy layout defaults on pre-1.6.0 stores, adds persistent AJAX notice dismissal, and includes a helpful WordPress Native AI Connectors migration reminder.
 
 = 1.6.1 =
 Fixes the live FAQ Count Badge across WooCommerce Block Themes and the backend Product Data FAQ tab, polishes Settings tab icons and card heading styles, and adds extensibility hooks.
