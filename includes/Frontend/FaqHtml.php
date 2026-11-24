@@ -19,13 +19,13 @@ class FaqHtml {
 		}
 
 		$product_faq          = esc_attr( (string) get_option( 'product_faq', 'enable' ) );
-		$product_faq_position = esc_attr( (string) get_option( 'product_faq_position', 'after_single_product' ) );
+		$product_faq_position = esc_attr( (string) get_option( 'product_faq_position', 'product_tab' ) );
 
 		if ( '' === $product_faq ) {
 			$product_faq = 'enable';
 		}
 		if ( '' === $product_faq_position ) {
-			$product_faq_position = 'after_single_product';
+			$product_faq_position = 'product_tab';
 		}
 
 		if ( 'disable' === $product_faq ) {
@@ -357,6 +357,20 @@ class FaqHtml {
 			return;
 		}
 
+		// Ensure frontend assets are enqueued whenever FAQs actually render (including inside page builders/widgets).
+		if ( ! is_admin() && ! ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+			if ( wp_style_is( 'faqstyle', 'registered' ) ) {
+				wp_enqueue_style( 'faqstyle' );
+			} else {
+				wp_enqueue_style( 'faqstyle', WOO_FAQ_URL . '/assets/css/woo-faq.css', [], WOO_FAQ_VERSION, 'all' );
+			}
+			if ( wp_script_is( 'faqscript', 'registered' ) ) {
+				wp_enqueue_script( 'faqscript' );
+			} else {
+				wp_enqueue_script( 'faqscript', WOO_FAQ_URL . '/assets/js/woo-faq.js', [ 'jquery' ], WOO_FAQ_VERSION, true );
+			}
+		}
+
 		$faqs   = $resolved['faqs'];
 		$source = $resolved['source'];
 
@@ -374,7 +388,7 @@ class FaqHtml {
 		$faq_question_style = ( '' !== $faq_question_color ? 'color:' . $faq_question_color . ';' : '' ) . ( '' !== $faq_question_font_size ? 'font-size:' . $faq_question_font_size . ';' : '' );
 		$faq_ans_style      = ( '' !== $faq_ans_color ? 'color:' . $faq_ans_color . ';' : '' ) . ( '' !== $faq_ans_font_size ? 'font-size:' . $faq_ans_font_size . ';' : '' );
 		?>
-		<div class="container woo-faq-container" data-faq-source="<?php echo esc_attr( $source ); ?>">
+		<div class="woo-faq-container" data-faq-source="<?php echo esc_attr( $source ); ?>">
 			<h2 class="woo-faq-heading" style="<?php echo esc_attr( $faq_heading_style ); ?>">
 				<span>
 					<?php

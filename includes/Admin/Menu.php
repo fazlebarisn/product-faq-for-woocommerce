@@ -55,20 +55,35 @@ class Menu {
 	}
 
 	/**
-	 * Add Settings & Upgrade to Pro links on the Plugins screen.
+	 * Add Settings & Upgrade to Pro / 40% OFF Black Friday links on the Plugins screen.
 	 *
 	 * @param array<int, string> $links Existing action links.
 	 * @return array<int, string>
 	 */
 	public function settingsLink( $links ) {
-		$settings_link = '<a href="' . esc_url( admin_url( 'admin.php?page=woo_sfaq' ) ) . '">' . esc_html__( 'Settings', 'product-faq-for-woocommerce' ) . '</a>';
+		$settings_link = sprintf(
+			'<a href="%s">%s</a>',
+			esc_url( admin_url( 'admin.php?page=woo_sfaq' ) ),
+			esc_html__( 'Settings', 'product-faq-for-woocommerce' )
+		);
+		array_unshift( $links, $settings_link );
 
-		if ( ! in_array( 'woo-product-faq-pro/product-faq-pro.php', apply_filters( 'active_plugins', get_option( 'active_plugins', [] ) ), true ) ) {
-			$pro_url  = woo_faq_utm_url( 'plugins/', 'pro-upgrade', 'plugins-action-link', 'product-faq' );
-			$pro_link = '<a href="' . esc_url( $pro_url ) . '" target="_blank" rel="noopener noreferrer" style="color: #667eea; font-weight: 600;">' . esc_html__( '🚀 Upgrade to Pro', 'product-faq-for-woocommerce' ) . '</a>';
-			array_push( $links, $settings_link, $pro_link );
-		} else {
-			array_push( $links, $settings_link );
+		$is_pro_active = in_array( 'woo-product-faq-pro/product-faq-pro.php', apply_filters( 'active_plugins', get_option( 'active_plugins', [] ) ), true )
+			&& ( ! function_exists( 'faq_pro_is_license_active' ) || faq_pro_is_license_active() );
+
+		if ( ! $is_pro_active ) {
+			$is_bfcm = function_exists( 'woo_faq_is_bfcm_promo_active' ) && woo_faq_is_bfcm_promo_active();
+			$pro_url = $is_bfcm
+				? woo_faq_utm_url( 'black-friday/', 'bfcm', 'plugins-list', 'product-faq' )
+				: woo_faq_utm_url( 'plugins/product-faq-for-woocommerce/', 'pro-upgrade', 'plugins-list' );
+
+			$links[] = sprintf(
+				'<a href="%s" target="_blank" rel="noopener noreferrer" style="color:#059669;font-weight:700;">%s</a>',
+				esc_url( $pro_url ),
+				$is_bfcm
+					? esc_html__( '40% OFF Black Friday', 'product-faq-for-woocommerce' )
+					: esc_html__( 'Get Pro', 'product-faq-for-woocommerce' )
+			);
 		}
 
 		return $links;
@@ -218,14 +233,14 @@ class Menu {
 	 */
 	public function faqPosition() {
 		$product_faq_position = get_option( 'product_faq_position' );
-		$faq_position         = ( false !== $product_faq_position && '' !== $product_faq_position ) ? $product_faq_position : 'after_single_product';
+		$faq_position         = ( false !== $product_faq_position && '' !== $product_faq_position ) ? $product_faq_position : 'product_tab';
 		?>
 		<select name="product_faq_position" id="product_faq_position">
+			<option value="product_tab" <?php selected( $faq_position, 'product_tab' ); ?>><?php esc_html_e( 'Product Tab (Recommended)', 'product-faq-for-woocommerce' ); ?></option>
 			<option value="after_cart_button" <?php selected( $faq_position, 'after_cart_button' ); ?>><?php esc_html_e( 'After Cart Button', 'product-faq-for-woocommerce' ); ?></option>
 			<option value="after_meta" <?php selected( $faq_position, 'after_meta' ); ?>><?php esc_html_e( 'After Meta', 'product-faq-for-woocommerce' ); ?></option>
 			<option value="after_summary" <?php selected( $faq_position, 'after_summary' ); ?>><?php esc_html_e( 'After Summary', 'product-faq-for-woocommerce' ); ?></option>
 			<option value="after_single_product" <?php selected( $faq_position, 'after_single_product' ); ?>><?php esc_html_e( 'After Single Product', 'product-faq-for-woocommerce' ); ?></option>
-			<option value="product_tab" <?php selected( $faq_position, 'product_tab' ); ?>><?php esc_html_e( 'Product Tab', 'product-faq-for-woocommerce' ); ?></option>
 			<option value="shortcode" <?php selected( $faq_position, 'shortcode' ); ?>><?php esc_html_e( 'Shortcode / Gutenberg Block Only ([woo_product_faq])', 'product-faq-for-woocommerce' ); ?></option>
 		</select>
 		<p class="description"><?php esc_html_e( 'Tip: Insert the "Product FAQ Accordion" Gutenberg block (type /faq in the block editor) or use [woo_product_faq], [woo_product_faq id="123"], or [woo_product_faq category="slug"].', 'product-faq-for-woocommerce' ); ?></p>
@@ -379,11 +394,13 @@ class Menu {
 	 * @return void
 	 */
 	public function AiConnectorStatus() {
-		$status         = AiEngine::getConnectorsStatus();
-		$is_ready       = ! empty( $status['is_ready'] );
-		$connectors_url = $status['connectors_url'];
-		$wp_ai_url      = $status['wp_ai_url'];
-		$providers      = $status['providers'] ?? [];
+		$status                = AiEngine::getConnectorsStatus();
+		$is_ready              = ! empty( $status['is_ready'] );
+		$has_connectors_screen = ! empty( $status['has_connectors_screen'] );
+		$connectors_url        = $status['connectors_url'];
+		$install_connector_url = $status['install_connector_url'] ?? admin_url( 'plugin-install.php?s=ai-provider-for&tab=search&type=term' );
+		$wp_ai_url             = $status['wp_ai_url'];
+		$providers             = $status['providers'] ?? [];
 		?>
 		<div style="background: #ffffff; border: 1px solid <?php echo $is_ready ? '#a7f3d0' : '#fde68a'; ?>; border-radius: 10px; padding: 18px 20px; max-width: 620px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
 			<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
@@ -396,18 +413,34 @@ class Menu {
 							<?php
 							if ( $is_ready ) {
 								esc_html_e( 'Connected via WordPress AI Connectors', 'product-faq-for-woocommerce' );
+							} elseif ( ! $has_connectors_screen ) {
+								esc_html_e( 'Smart FAQ Templates Active (WordPress 7.0+ Required for Live AI)', 'product-faq-for-woocommerce' );
 							} else {
 								esc_html_e( 'No Active AI Connector Configured', 'product-faq-for-woocommerce' );
 							}
 							?>
 						</div>
 						<div style="font-size: 12px; color: #64748b; margin-top: 2px;">
-							<?php esc_html_e( 'Uses WordPress native AI Client (wp_ai_client_prompt) & Settings ➔ Connectors.', 'product-faq-for-woocommerce' ); ?>
+							<?php
+							if ( $has_connectors_screen ) {
+								esc_html_e( 'Uses WordPress native AI Client (wp_ai_client_prompt) & Settings ➔ Connectors.', 'product-faq-for-woocommerce' );
+							} else {
+								esc_html_e( 'Update WordPress to 7.0+ to connect Google Gemini, OpenAI, or Claude via Settings ➔ Connectors. Built-in Smart Templates work right now!', 'product-faq-for-woocommerce' );
+							}
+							?>
 						</div>
 					</div>
 				</div>
 				<span style="display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: <?php echo $is_ready ? '#ecfdf5' : '#fffbeb'; ?>; color: <?php echo $is_ready ? '#047857' : '#b45309'; ?>; border: 1px solid <?php echo $is_ready ? '#6ee7b7' : '#fcd34d'; ?>;">
-					<?php echo $is_ready ? esc_html__( 'Ready', 'product-faq-for-woocommerce' ) : esc_html__( 'Setup Needed', 'product-faq-for-woocommerce' ); ?>
+					<?php
+					if ( $is_ready ) {
+						esc_html_e( 'Ready', 'product-faq-for-woocommerce' );
+					} elseif ( ! $has_connectors_screen ) {
+						esc_html_e( 'WP 7.0+ Needed', 'product-faq-for-woocommerce' );
+					} else {
+						esc_html_e( 'Setup Needed', 'product-faq-for-woocommerce' );
+					}
+					?>
 				</span>
 			</div>
 
@@ -434,12 +467,23 @@ class Menu {
 			<?php endif; ?>
 
 			<div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
-				<a href="<?php echo esc_url( $connectors_url ); ?>" class="button button-primary" style="display: inline-flex; align-items: center; gap: 6px;">
-					<span>⚙️</span> <?php esc_html_e( 'Manage WordPress Connectors', 'product-faq-for-woocommerce' ); ?>
-				</a>
-				<button type="button" class="button button-secondary" id="woo-faq-test-ai-key">
-					<?php esc_html_e( 'Test AI Connection', 'product-faq-for-woocommerce' ); ?>
-				</button>
+				<?php if ( $has_connectors_screen ) : ?>
+					<a href="<?php echo esc_url( $connectors_url ); ?>" class="button button-primary" style="display: inline-flex; align-items: center; gap: 6px;">
+						<span>⚙️</span> <?php esc_html_e( 'Manage WordPress Connectors', 'product-faq-for-woocommerce' ); ?>
+					</a>
+					<?php if ( empty( $providers ) ) : ?>
+						<a href="<?php echo esc_url( $install_connector_url ); ?>" class="button button-secondary">
+							<?php esc_html_e( '➕ Install AI Provider Plugin', 'product-faq-for-woocommerce' ); ?>
+						</a>
+					<?php endif; ?>
+					<button type="button" class="button button-secondary" id="woo-faq-test-ai-key">
+						<?php esc_html_e( 'Test AI Connection', 'product-faq-for-woocommerce' ); ?>
+					</button>
+				<?php else : ?>
+					<a href="<?php echo esc_url( $connectors_url ); ?>" class="button button-primary">
+						<?php esc_html_e( 'Check WordPress Updates (7.0+)', 'product-faq-for-woocommerce' ); ?>
+					</a>
+				<?php endif; ?>
 				<?php if ( ! empty( $wp_ai_url ) ) : ?>
 					<a href="<?php echo esc_url( $wp_ai_url ); ?>" class="button button-link" style="text-decoration: none;">
 						<?php esc_html_e( 'WordPress AI Settings ➔', 'product-faq-for-woocommerce' ); ?>

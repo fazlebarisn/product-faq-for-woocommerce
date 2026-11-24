@@ -146,7 +146,9 @@ class ProductDataTab {
 							<div class="fbs-ai-field-group is-count">
 								<label class="fbs-ai-field-label"><?php esc_html_e( 'Number of FAQs', 'product-faq-for-woocommerce' ); ?></label>
 								<select id="faq-ai-count-select" class="fbs-ai-select">
-									<option value="3"><?php esc_html_e( '3 FAQs (Free Max)', 'product-faq-for-woocommerce' ); ?></option>
+									<option value="5"><?php esc_html_e( '5 FAQs (Recommended)', 'product-faq-for-woocommerce' ); ?></option>
+									<option value="3"><?php esc_html_e( '3 FAQs', 'product-faq-for-woocommerce' ); ?></option>
+									<option value="10"><?php esc_html_e( '10 FAQs', 'product-faq-for-woocommerce' ); ?></option>
 									<option value="2"><?php esc_html_e( '2 FAQs', 'product-faq-for-woocommerce' ); ?></option>
 									<option value="1"><?php esc_html_e( '1 FAQ', 'product-faq-for-woocommerce' ); ?></option>
 								</select>

@@ -162,7 +162,9 @@ button.faq-add-question.button.button-primary {
   margin: 0 auto;
 }
 
-.wrap.fbs-author .author-info, .about-author, .contact-info {
+.wrap.fbs-author .author-info,
+.wrap.fbs-author .about-author,
+.wrap.fbs-author .contact-info {
   margin-bottom: 30px;
 }
 

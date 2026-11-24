@@ -35,6 +35,17 @@ function woo_faq_utm_url( $path = 'plugins/', $campaign = 'pro-upgrade', $conten
 }
 
 /**
+ * Determine whether the annual Black Friday / Cyber Monday promotional window (Nov 12 – Dec 2) is active.
+ *
+ * @since 1.7.0
+ * @return bool
+ */
+function woo_faq_is_bfcm_promo_active() {
+	$md = (int) gmdate( 'md' );
+	return ( $md >= 1112 && $md <= 1202 );
+}
+
+/**
  * Search WooCommerce product taxonomy terms via AJAX.
  *
  * @author Fazle Bari
@@ -87,28 +98,5 @@ add_action(
 		);
 
 		wp_send_json( $formatted );
-	}
-);
-
-/**
- * Handle dismissing review request notice.
- *
- * @author Fazle Bari
- */
-add_action(
-	'wp_ajax_woo_faq_dismiss_review_notice',
-	function () {
-		check_ajax_referer( 'woo_faq_dismiss_review_notice', 'nonce' );
-
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error();
-		}
-
-		$user_id = get_current_user_id();
-		if ( $user_id ) {
-			update_user_meta( $user_id, 'woo_faq_review_notice_dismissed', true );
-		}
-
-		wp_send_json_success();
 	}
 );

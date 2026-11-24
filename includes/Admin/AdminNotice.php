@@ -76,10 +76,18 @@ class AdminNotice {
 			return;
 		}
 
-		$ai_ready = class_exists( '\Woo\Faq\Admin\AiEngine' ) && method_exists( '\Woo\Faq\Admin\AiEngine', 'isWpAiReady' )
-			? \Woo\Faq\Admin\AiEngine::isWpAiReady()
+		$ai_ready = class_exists( '\Woo\Faq\Admin\AiEngine' ) && method_exists( '\Woo\Faq\Admin\AiEngine', 'isAiReady' )
+			? \Woo\Faq\Admin\AiEngine::isAiReady()
 			: false;
 		if ( $ai_ready ) {
+			return;
+		}
+
+		$has_connectors_screen = class_exists( '\Woo\Faq\Admin\AiEngine' ) && method_exists( '\Woo\Faq\Admin\AiEngine', 'hasConnectorsScreen' )
+			? \Woo\Faq\Admin\AiEngine::hasConnectorsScreen()
+			: file_exists( ABSPATH . 'wp-admin/options-connectors.php' );
+
+		if ( ! $has_connectors_screen ) {
 			return;
 		}
 

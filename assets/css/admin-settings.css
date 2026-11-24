@@ -1376,4 +1376,85 @@
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
-} 
+}
+
+/* ==========================================================================
+   Black Friday / Cyber Monday Promotional Banner (Matches FBS Secure Optimize)
+   ========================================================================== */
+.woofaq-bfcm-banner {
+    margin-top: 26px;
+    background: linear-gradient(135deg, #090d16 0%, #1e1b4b 55%, #064e3b 100%);
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    border-radius: 16px;
+    padding: 24px 28px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 22px;
+    flex-wrap: wrap;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+}
+
+.woofaq-bfcm-banner__content {
+    max-width: 740px;
+}
+
+.woofaq-bfcm-pill {
+    display: inline-block;
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(52, 211, 153, 0.5);
+    color: #34d399;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.woofaq-bfcm-banner h3 {
+    margin: 0 0 6px !important;
+    font-size: 18.5px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    line-height: 1.3 !important;
+}
+
+.woofaq-bfcm-banner p {
+    margin: 0 !important;
+    font-size: 13.5px !important;
+    color: #cbd5e1 !important;
+    line-height: 1.5 !important;
+}
+
+.woofaq-bfcm-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    background: #10b981;
+    color: #052e16 !important;
+    font-size: 13.5px;
+    font-weight: 800;
+    text-decoration: none !important;
+    white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.28);
+    transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.woofaq-bfcm-btn:hover,
+.woofaq-bfcm-btn:focus {
+    background: #34d399;
+    color: #052e16 !important;
+    transform: translateY(-1px);
+}
+
+.woofaq-bfcm-btn .dashicons {
+    font-size: 17px;
+    width: 17px;
+    height: 17px;
+    line-height: 17px;
+}

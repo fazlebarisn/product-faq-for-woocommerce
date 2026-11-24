@@ -1,39 +1,33 @@
-/* Product FAQ for WooCommerce - Frontend Accordion Styles (Single Product, Gutenberg Block & [woo_product_faq] Shortcode) */
+/* Product FAQ for WooCommerce - Strictly Scoped Frontend Accordion Styles (Single Product, Gutenberg Block, Shortcode & Pro Archives) */
 
-.woo-faq-container {
+.woo-faq-container,
+.woo-faq-archive-container {
   width: 100%;
   max-width: 100%;
   margin: 24px 0;
   box-sizing: border-box;
 }
 
-.single-product .accordion,
 .woo-faq-container .accordion,
 .woo-faq-archive-container .accordion {
   width: 100%;
   box-sizing: border-box;
 }
 
-.single-product .accordion .accordion-item,
 .woo-faq-container .accordion .accordion-item,
-.woo-faq-archive-container .accordion .accordion-item,
-.accordion .accordion-item {
+.woo-faq-archive-container .accordion .accordion-item {
   border-bottom: 1px solid #e5e5e5;
   width: 100%;
   box-sizing: border-box;
 }
 
-.single-product .accordion .accordion-item button[aria-expanded='true'],
 .woo-faq-container .accordion .accordion-item button[aria-expanded='true'],
-.woo-faq-archive-container .accordion .accordion-item button[aria-expanded='true'],
-.accordion .accordion-item button[aria-expanded='true'] {
+.woo-faq-archive-container .accordion .accordion-item button[aria-expanded='true'] {
   border-bottom: 1px solid #03b5d2;
 }
 
-body .single-product .accordion .accordion-item > button,
 body .woo-faq-container .accordion .accordion-item > button,
-body .woo-faq-archive-container .accordion .accordion-item > button,
-body .accordion .accordion-item > button {
+body .woo-faq-archive-container .accordion .accordion-item > button {
   position: relative !important;
   display: block !important;
   text-align: left !important;
@@ -54,14 +48,10 @@ body .accordion .accordion-item > button {
   margin: 0 !important;
 }
 
-body .single-product .accordion .accordion-item > button:hover,
-body .single-product .accordion .accordion-item > button:focus,
 body .woo-faq-container .accordion .accordion-item > button:hover,
 body .woo-faq-container .accordion .accordion-item > button:focus,
 body .woo-faq-archive-container .accordion .accordion-item > button:hover,
-body .woo-faq-archive-container .accordion .accordion-item > button:focus,
-body .accordion .accordion-item > button:hover,
-body .accordion .accordion-item > button:focus {
+body .woo-faq-archive-container .accordion .accordion-item > button:focus {
   cursor: pointer;
   color: #03b5d2;
   background: transparent !important;
@@ -69,29 +59,23 @@ body .accordion .accordion-item > button:focus {
   outline: none !important;
 }
 
-.single-product .accordion button:hover::after,
-.single-product .accordion button:focus::after,
 .woo-faq-container .accordion button:hover::after,
 .woo-faq-container .accordion button:focus::after,
-.accordion .accordion-item > button:hover::after,
-.accordion .accordion-item > button:focus::after {
+.woo-faq-archive-container .accordion button:hover::after,
+.woo-faq-archive-container .accordion button:focus::after {
   cursor: pointer;
   color: #03b5d2;
   border: 1px solid #03b5d2;
 }
 
-.single-product .accordion button .accordion-title,
 .woo-faq-container .accordion button .accordion-title,
-.woo-faq-archive-container .accordion button .accordion-title,
-.accordion .accordion-item > button .accordion-title {
+.woo-faq-archive-container .accordion button .accordion-title {
   display: inline-block;
   padding: 0 1.5em 0 0;
 }
 
-.single-product .accordion button .icon,
 .woo-faq-container .accordion button .icon,
-.woo-faq-archive-container .accordion button .icon,
-.accordion .accordion-item > button .icon {
+.woo-faq-archive-container .accordion button .icon {
   display: inline-block;
   position: absolute;
   top: 50%;
@@ -104,10 +88,8 @@ body .accordion .accordion-item > button:focus {
   box-sizing: border-box;
 }
 
-.single-product .accordion button .icon::before,
 .woo-faq-container .accordion button .icon::before,
-.woo-faq-archive-container .accordion button .icon::before,
-.accordion .accordion-item > button .icon::before {
+.woo-faq-archive-container .accordion button .icon::before {
   display: block;
   position: absolute;
   content: '';
@@ -118,10 +100,8 @@ body .accordion .accordion-item > button:focus {
   background: currentColor;
 }
 
-.single-product .accordion button .icon::after,
 .woo-faq-container .accordion button .icon::after,
-.woo-faq-archive-container .accordion button .icon::after,
-.accordion .accordion-item > button .icon::after {
+.woo-faq-archive-container .accordion button .icon::after {
   display: block;
   position: absolute;
   content: '';
@@ -132,34 +112,26 @@ body .accordion .accordion-item > button:focus {
   background: currentColor;
 }
 
-.single-product .accordion button[aria-expanded='true'],
 .woo-faq-container .accordion button[aria-expanded='true'],
-.woo-faq-archive-container .accordion button[aria-expanded='true'],
-.accordion .accordion-item > button[aria-expanded='true'] {
+.woo-faq-archive-container .accordion button[aria-expanded='true'] {
   color: #03b5d2;
 }
 
-.single-product .accordion button[aria-expanded='true'] .icon::after,
 .woo-faq-container .accordion button[aria-expanded='true'] .icon::after,
-.woo-faq-archive-container .accordion button[aria-expanded='true'] .icon::after,
-.accordion .accordion-item > button[aria-expanded='true'] .icon::after {
+.woo-faq-archive-container .accordion button[aria-expanded='true'] .icon::after {
   width: 0;
 }
 
-.single-product .accordion button[aria-expanded='true'] + .accordion-content,
 .woo-faq-container .accordion button[aria-expanded='true'] + .accordion-content,
-.woo-faq-archive-container .accordion button[aria-expanded='true'] + .accordion-content,
-.accordion button[aria-expanded='true'] + .accordion-content {
+.woo-faq-archive-container .accordion button[aria-expanded='true'] + .accordion-content {
   opacity: 1;
   max-height: 2500px;
   transition: max-height 0.35s ease, opacity 0.25s ease;
   will-change: opacity, max-height;
 }
 
-.single-product .accordion .accordion-content,
 .woo-faq-container .accordion .accordion-content,
-.woo-faq-archive-container .accordion .accordion-content,
-.accordion .accordion-content {
+.woo-faq-archive-container .accordion .accordion-content {
   opacity: 0;
   max-height: 0;
   overflow: hidden;
@@ -167,10 +139,8 @@ body .accordion .accordion-item > button:focus {
   will-change: opacity, max-height;
 }
 
-.single-product .accordion .accordion-content .accordion-answer,
 .woo-faq-container .accordion .accordion-content .accordion-answer,
-.woo-faq-archive-container .accordion .accordion-content .accordion-answer,
-.accordion .accordion-content .accordion-answer {
+.woo-faq-archive-container .accordion .accordion-content .accordion-answer {
   padding: 0.9em 0 1.2em;
   font-size: 1rem;
   font-weight: 400;
@@ -178,10 +148,8 @@ body .accordion .accordion-item > button:focus {
   word-break: break-word;
 }
 
-.single-product .accordion .accordion-content p,
 .woo-faq-container .accordion .accordion-content p,
-.woo-faq-archive-container .accordion .accordion-content p,
-.accordion .accordion-content p {
+.woo-faq-archive-container .accordion .accordion-content p {
   font-size: inherit;
   color: inherit;
   font-weight: inherit;
@@ -190,30 +158,36 @@ body .accordion .accordion-item > button:focus {
   word-break: break-word;
 }
 
-.accordion .accordion-content .accordion-answer p:last-child {
+.woo-faq-container .accordion .accordion-content .accordion-answer p:last-child,
+.woo-faq-archive-container .accordion .accordion-content .accordion-answer p:last-child {
   margin-bottom: 0;
 }
 
-.accordion .accordion-content .accordion-answer ul,
-.accordion .accordion-content .accordion-answer ol {
+.woo-faq-container .accordion .accordion-content .accordion-answer ul,
+.woo-faq-container .accordion .accordion-content .accordion-answer ol,
+.woo-faq-archive-container .accordion .accordion-content .accordion-answer ul,
+.woo-faq-archive-container .accordion .accordion-content .accordion-answer ol {
   margin: 0.5em 0 0.85em 1.4em;
   padding: 0;
   color: inherit;
   font-size: inherit;
 }
 
-.accordion .accordion-content .accordion-answer li {
+.woo-faq-container .accordion .accordion-content .accordion-answer li,
+.woo-faq-archive-container .accordion .accordion-content .accordion-answer li {
   margin-bottom: 0.35em;
   line-height: 1.6;
 }
 
-.accordion .accordion-content .accordion-answer a {
+.woo-faq-container .accordion .accordion-content .accordion-answer a,
+.woo-faq-archive-container .accordion .accordion-content .accordion-answer a {
   color: #0284c7;
   text-decoration: underline;
   font-weight: 500;
 }
 
-.accordion .accordion-content .accordion-answer a:hover {
+.woo-faq-container .accordion .accordion-content .accordion-answer a:hover,
+.woo-faq-archive-container .accordion .accordion-content .accordion-answer a:hover {
   color: #0369a1;
 }
 

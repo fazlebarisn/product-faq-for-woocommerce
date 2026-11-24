@@ -48,7 +48,10 @@ if ( isset( $_POST['save_woo_afaq'] ) && check_admin_referer( 'save_woo_afaq_dat
 	}
 }
 
-$bulk_upgrade_url = woo_faq_utm_url( 'plugins/', 'pro-upgrade', 'bulk-faq-banner', 'product-faq' );
+$woofaq_is_bfcm   = function_exists( 'woo_faq_is_bfcm_promo_active' ) && woo_faq_is_bfcm_promo_active();
+$bulk_upgrade_url = $woofaq_is_bfcm
+	? woo_faq_utm_url( 'black-friday/', 'bfcm', 'bulk-faq-banner', 'product-faq' )
+	: woo_faq_utm_url( 'plugins/product-faq-for-woocommerce/', 'pro-upgrade', 'bulk-faq-banner' );
 ?>
 
 <div class="wrap">
@@ -61,14 +64,24 @@ $bulk_upgrade_url = woo_faq_utm_url( 'plugins/', 'pro-upgrade', 'bulk-faq-banner
 		<?php if ( ! $is_pro_plugin_active ) : ?>
 			<div class="pro-upgrade-banner">
 				<div class="pro-banner-content">
-					<div class="pro-banner-icon">⭐</div>
+					<div class="pro-banner-icon"><?php echo $woofaq_is_bfcm ? '🔥' : '⭐'; ?></div>
 					<div class="pro-banner-text">
-						<h3><?php esc_html_e( 'Unlock Unlimited Bulk FAQ Groups & Category AI Generation', 'product-faq-for-woocommerce' ); ?></h3>
+						<h3>
+							<?php
+							echo $woofaq_is_bfcm
+								? esc_html__( 'Black Friday 40% OFF: Unlock Unlimited Bulk FAQ Groups & Category AI ($9/yr or $29.40 Lifetime!)', 'product-faq-for-woocommerce' )
+								: esc_html__( 'Unlock Unlimited Bulk FAQ Groups & Category AI Generation', 'product-faq-for-woocommerce' );
+							?>
+						</h3>
 						<p><?php esc_html_e( 'Upgrade to Product FAQ Pro for unlimited category/tag FAQ groups, 1-click Bulk AI FAQ generation, Shop/Category Archive FAQs, and priority support.', 'product-faq-for-woocommerce' ); ?></p>
 					</div>
 					<div class="pro-banner-action">
 						<a href="<?php echo esc_url( $bulk_upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="pro-banner-button">
-							<?php esc_html_e( 'Explore Pro ↗', 'product-faq-for-woocommerce' ); ?>
+							<?php
+							echo $woofaq_is_bfcm
+								? esc_html__( 'Claim 40% OFF Deal ↗', 'product-faq-for-woocommerce' )
+								: esc_html__( 'Explore Pro ↗', 'product-faq-for-woocommerce' );
+							?>
 						</a>
 					</div>
 				</div>

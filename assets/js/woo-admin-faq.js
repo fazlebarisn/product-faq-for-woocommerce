@@ -10,29 +10,11 @@
     const UPGRADE_URL = (typeof wooFaqPro !== 'undefined' && wooFaqPro.upgrade_url)
       ? wooFaqPro.upgrade_url
       : 'https://fbsfusion.com/plugins/?utm_source=product-faq-for-woocommerce&utm_medium=wp-admin&utm_campaign=pro-upgrade&utm_content=limit-reached-button#product-faq';
-    const MAX_SINGLE_FAQS = isProActive ? Infinity : 3;
-    const MAX_GROUPS_FREE = isProActive ? Infinity : 2;
-    const MAX_FAQS_FREE = isProActive ? Infinity : 3;
+    const MAX_GROUPS_FREE = isProActive ? Infinity : 3;
+    const MAX_FAQS_FREE = isProActive ? Infinity : 5;
 
     // Initialize FAQ counter based on existing FAQs
     var faqCounter = $("div.option-group-wrapper .options_group").length;
-
-    function syncSingleFaqLimitButton() {
-      const currentRows = $("div.option-group-wrapper .options_group").length;
-      if (currentRows >= MAX_SINGLE_FAQS) {
-        const $btn = $(".faq-product-toolbar .faq-add-question, .faq-add-question");
-        if ($btn.length) {
-          const $newBtn = $('<a href="' + UPGRADE_URL + '" target="_blank" rel="noopener noreferrer" class="button fbs-upgrade-button" style="background-color: #ff9800; border-color: #ff9800; color: #fff;">Upgrade</a>');
-          $btn.replaceWith($newBtn);
-        }
-      } else {
-        const $upgradeBtn = $(".faq-product-toolbar .fbs-upgrade-button");
-        if ($upgradeBtn.length) {
-          const $newBtn = $('<button type="button" class="faq-add-question button button-primary"><span class="dashicons dashicons-plus-alt2" style="font-size: 16px; line-height: 26px; vertical-align: middle;"></span> Add New FAQ</button>');
-          $upgradeBtn.replaceWith($newBtn);
-        }
-      }
-    }
 
     function updateAdminFaqTabBadge() {
       const $tabSpan = $("#woocommerce-product-data ul.wc-tabs li.frequently_asked_questions_tab a span");
@@ -62,8 +44,7 @@
       }
     }
 
-    // Initialize button state & live tab count badge on page load
-    syncSingleFaqLimitButton();
+    // Initialize live tab count badge on page load
     updateAdminFaqTabBadge();
 
     $(document.body).on("input change", ".faq-question-box, .faq-answer-box", function () {
@@ -71,13 +52,6 @@
     });
 
     $(document.body).on("click", ".faq-add-question", function () {
-      const currentFaqs = $("div.option-group-wrapper .options_group").length;
-      if (currentFaqs >= MAX_SINGLE_FAQS) {
-        syncSingleFaqLimitButton();
-        alert("Upgrade to Product FAQ Pro to add more than 3 FAQs per product.");
-        return;
-      }
-
       var faqNumber = faqCounter;
 
       var myElement = `
@@ -99,13 +73,11 @@
       $("div.option-group-wrapper").append(myElement);
       faqCounter++;
 
-      syncSingleFaqLimitButton();
       updateAdminFaqTabBadge();
     });
 
     $(document.body).on("click", ".faq-remove-question", function () {
       $(this).closest(".options_group").remove();
-      syncSingleFaqLimitButton();
       updateAdminFaqTabBadge();
     });
 
@@ -114,7 +86,7 @@
       const currentGroups = $("#faq-groups-container .fbs-faq-archive-group").length;
 
       if (currentGroups >= MAX_GROUPS_FREE) {
-        alert("Upgrade to Product FAQ Pro to add more than 2 FAQ groups.");
+        alert("Upgrade to Product FAQ Pro to add more than 3 Bulk FAQ groups.");
         return;
       }
 
@@ -159,7 +131,7 @@
         const currentFaqs = groupEl.find(".fbs-archive-faq-item").length;
 
         if (currentFaqs >= MAX_FAQS_FREE) {
-          alert("Upgrade to Product FAQ Pro to add more than 3 FAQs per group.");
+          alert("Upgrade to Product FAQ Pro to add more than 5 FAQs per Bulk FAQ group.");
           return;
         }
 
@@ -318,12 +290,6 @@
       });
 
       if (!filled) {
-        const currentFaqs = $("div.option-group-wrapper .options_group").length;
-        if (currentFaqs >= MAX_SINGLE_FAQS) {
-          alert("Free version limit of 3 FAQs reached. Upgrade to Pro for unlimited FAQs.");
-          return false;
-        }
-
         const faqNumber = faqCounter;
         const myElement = `
           <div class="options_group faq-group" data-index="${faqNumber}">
@@ -343,7 +309,6 @@
         $("div.option-group-wrapper").append(myElement);
         faqCounter++;
       }
-      syncSingleFaqLimitButton();
       updateAdminFaqTabBadge();
       return true;
     }

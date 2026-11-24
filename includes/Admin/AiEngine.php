@@ -36,13 +36,34 @@ class AiEngine {
 	}
 
 	/**
+	 * Backwards-compatible alias for isAiReady().
+	 *
+	 * @since 1.7.0
+	 * @return bool
+	 */
+	public static function isWpAiReady() {
+		return self::isAiReady();
+	}
+
+	/**
+	 * Check whether the current WordPress installation supports the native Settings -> Connectors screen (WP 7.0+).
+	 *
+	 * @since 1.7.0
+	 * @return bool
+	 */
+	public static function hasConnectorsScreen() {
+		return function_exists( 'wp_get_connectors' ) || file_exists( ABSPATH . 'wp-admin/options-connectors.php' );
+	}
+
+	/**
 	 * Retrieve status of all registered WordPress AI Provider Connectors (Settings -> Connectors).
 	 *
 	 * @return array<string, mixed>
 	 */
 	public static function getConnectorsStatus() {
-		$providers   = [];
-		$has_any_key = false;
+		$providers             = [];
+		$has_any_key           = false;
+		$has_connectors_screen = self::hasConnectorsScreen();
 
 		if ( function_exists( 'wp_get_connectors' ) ) {
 			$all_connectors = (array) wp_get_connectors();
@@ -93,11 +114,13 @@ class AiEngine {
 		$is_ready = self::isAiReady();
 
 		return [
-			'is_ready'       => $is_ready,
-			'has_any_key'    => $has_any_key || $is_ready,
-			'connectors_url' => admin_url( 'options-connectors.php' ),
-			'wp_ai_url'      => defined( 'WPAI_VERSION' ) ? admin_url( 'options-general.php?page=ai-wp-admin' ) : '',
-			'providers'      => $providers,
+			'is_ready'              => $is_ready,
+			'has_any_key'           => $has_any_key || $is_ready,
+			'has_connectors_screen' => $has_connectors_screen,
+			'connectors_url'        => $has_connectors_screen ? admin_url( 'options-connectors.php' ) : admin_url( 'update-core.php' ),
+			'install_connector_url' => admin_url( 'plugin-install.php?s=ai-provider-for&tab=search&type=term' ),
+			'wp_ai_url'             => defined( 'WPAI_VERSION' ) ? admin_url( 'options-general.php?page=ai-wp-admin' ) : '',
+			'providers'             => $providers,
 		];
 	}
 
@@ -159,9 +182,13 @@ class AiEngine {
 		}
 
 		if ( ! self::isAiReady() ) {
+			$missing_msg = self::hasConnectorsScreen()
+				? __( 'No active AI provider is connected in WordPress yet. Install an AI Provider Connector (Google Gemini, OpenAI, or Anthropic) and add your key under Settings -> Connectors.', 'product-faq-for-woocommerce' )
+				: __( 'Live AI generation requires WordPress 7.0+ (Settings -> Connectors). Built-in Smart FAQ Templates remain available on all WordPress versions.', 'product-faq-for-woocommerce' );
+
 			wp_send_json_error(
 				[
-					'message' => __( 'No active AI provider is connected in WordPress. Please go to Settings -> Connectors to connect Google Gemini, OpenAI, or Anthropic.', 'product-faq-for-woocommerce' ),
+					'message' => $missing_msg,
 				]
 			);
 		}
@@ -332,8 +359,8 @@ class AiEngine {
 		$product_id    = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
 		$product_title = isset( $_POST['product_title'] ) ? sanitize_text_field( wp_unslash( $_POST['product_title'] ) ) : '';
 		$product_desc  = isset( $_POST['product_desc'] ) ? sanitize_textarea_field( wp_unslash( $_POST['product_desc'] ) ) : '';
-		$count         = isset( $_POST['count'] ) ? intval( wp_unslash( $_POST['count'] ) ) : 3;
-		$max_ai_count  = (int) apply_filters( 'woo_faq_ai_max_count', 3 );
+		$count         = isset( $_POST['count'] ) ? intval( wp_unslash( $_POST['count'] ) ) : 5;
+		$max_ai_count  = (int) apply_filters( 'woo_faq_ai_max_count', 10 );
 		$count         = max( 1, min( $count, max( 1, $max_ai_count ) ) );
 		$tone          = isset( $_POST['tone'] ) ? sanitize_text_field( wp_unslash( $_POST['tone'] ) ) : get_option( 'woo_faq_ai_tone', 'sales' );
 
@@ -341,12 +368,16 @@ class AiEngine {
 
 		// If WordPress AI Client is not configured yet, provide contextual smart templates as demo.
 		if ( ! self::isAiReady() ) {
-			$demo_faqs = $this->generateFallbackFaqs( $product_title, $product_desc, $count );
+			$demo_faqs    = $this->generateFallbackFaqs( $product_title, $product_desc, $count );
+			$fallback_msg = self::hasConnectorsScreen()
+				? __( 'Generated using built-in Smart FAQ Templates. Connect Google Gemini, OpenAI, or Claude under WordPress Settings -> Connectors for live spec-aware AI generation.', 'product-faq-for-woocommerce' )
+				: __( 'Generated using built-in Smart FAQ Templates (upgrade to WordPress 7.0+ to unlock live Settings -> Connectors AI providers).', 'product-faq-for-woocommerce' );
+
 			wp_send_json_success(
 				[
 					'faqs'    => $demo_faqs,
 					'is_demo' => true,
-					'message' => __( 'Generated using built-in Smart Assistant. Connect an AI provider in WordPress Settings -> Connectors for live spec-aware AI generation.', 'product-faq-for-woocommerce' ),
+					'message' => $fallback_msg,
 				]
 			);
 		}
@@ -430,6 +461,16 @@ class AiEngine {
 				/* translators: %s: Product title or product name */
 				'question' => sprintf( __( 'Is %s covered under warranty?', 'product-faq-for-woocommerce' ), $pname ),
 				'answer'   => __( 'Yes! All our products come with a 1-year manufacturer warranty covering any defects in materials or craftsmanship.', 'product-faq-for-woocommerce' ),
+			],
+			[
+				/* translators: %s: Product title or product name */
+				'question' => sprintf( __( 'How do I choose the right size or specification for %s?', 'product-faq-for-woocommerce' ), $pname ),
+				'answer'   => __( 'Please refer to the product specifications and sizing details on this page. If you need personalized guidance, reach out to our support team prior to ordering.', 'product-faq-for-woocommerce' ),
+			],
+			[
+				/* translators: %s: Product title or product name */
+				'question' => sprintf( __( 'How should I care for and maintain %s?', 'product-faq-for-woocommerce' ), $pname ),
+				'answer'   => __( 'Follow the included care instructions to keep your item in peak condition, and store it in a clean, dry environment when not in use.', 'product-faq-for-woocommerce' ),
 			],
 		];
 

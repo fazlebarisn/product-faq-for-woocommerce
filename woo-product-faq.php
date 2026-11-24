@@ -4,7 +4,7 @@
  * Requires Plugins:     woocommerce
  * Plugin URI:           https://fbsfusion.com/plugins/
  * Description:          Boost WooCommerce conversions and Google Rich Results with responsive Product FAQ tabs, Gutenberg blocks, rich HTML answers, FAQPage JSON-LD schema, and spec-aware AI FAQ generation.
- * Version:              1.6.2
+ * Version:              1.7.0
  * Author:               Fazle Bari
  * Author URI:           https://fbsfusion.com/
  * Requires PHP:         7.3
@@ -39,7 +39,7 @@ final class WooFaq {
 	/**
 	 * Plugin version.
 	 */
-	const version = '1.6.2';
+	const version = '1.7.0';
 
 	/**
 	 * Class constructor.
@@ -56,35 +56,49 @@ final class WooFaq {
 	}
 
 	/**
-	 * Preserve legacy visual defaults (`disable` for count badge & auto-open first FAQ)
-	 * on pre-1.6.0 stores that already configured settings without explicitly setting
-	 * those new options.
+	 * Preserve legacy visual defaults (`disable` for count badge & auto-open first FAQ on pre-1.6.0 stores,
+	 * and `after_single_product` position on pre-1.7.0 stores that never saved settings) so existing stores
+	 * never experience unexpected layout shifts upon updating.
 	 *
 	 * @since 1.6.2
 	 * @return void
 	 */
 	public function maybeMigrateLegacyDefaults() {
-		if ( '1' === get_option( 'woo_faq_v162_migrated' ) ) {
+		$v162_done = ( '1' === get_option( 'woo_faq_v162_migrated' ) );
+		$v170_done = ( '1' === get_option( 'woo_faq_v170_migrated' ) );
+
+		if ( $v162_done && $v170_done ) {
 			return;
 		}
 
-		$installed    = get_option( 'woo_faq_installed', false );
-		$has_position = ( false !== get_option( 'product_faq_position', false ) );
-		$prev_ver     = (string) get_option( 'woo_faq_version', '' );
+		$installed = get_option( 'woo_faq_installed', false );
+		$prev_ver  = (string) get_option( 'woo_faq_version', '' );
 
-		$is_legacy_store = ( false !== $installed && $has_position && ( '' === $prev_ver || version_compare( $prev_ver, '1.6.0', '<' ) ) );
+		if ( ! $v162_done ) {
+			$is_pre_160_store = ( false !== $installed && ( '' === $prev_ver || version_compare( $prev_ver, '1.6.0', '<' ) ) );
 
-		if ( $is_legacy_store ) {
-			if ( false === get_option( 'woo_faq_open_first', false ) ) {
-				update_option( 'woo_faq_open_first', 'disable' );
+			if ( $is_pre_160_store ) {
+				if ( false === get_option( 'woo_faq_open_first', false ) ) {
+					update_option( 'woo_faq_open_first', 'disable' );
+				}
+				if ( false === get_option( 'woo_faq_show_count_badge', false ) ) {
+					update_option( 'woo_faq_show_count_badge', 'disable' );
+				}
 			}
-			if ( false === get_option( 'woo_faq_show_count_badge', false ) ) {
-				update_option( 'woo_faq_show_count_badge', 'disable' );
-			}
+
+			update_option( 'woo_faq_v162_migrated', '1', false );
 		}
 
-		update_option( 'woo_faq_version', WOO_FAQ_VERSION );
-		update_option( 'woo_faq_v162_migrated', '1', false );
+		if ( ! $v170_done ) {
+			$is_pre_170_store = ( false !== $installed && ( '' === $prev_ver || version_compare( $prev_ver, '1.7.0', '<' ) ) );
+
+			if ( $is_pre_170_store && false === get_option( 'product_faq_position', false ) ) {
+				update_option( 'product_faq_position', 'after_single_product' );
+			}
+
+			update_option( 'woo_faq_version', WOO_FAQ_VERSION );
+			update_option( 'woo_faq_v170_migrated', '1', false );
+		}
 	}
 
 	/**
@@ -157,6 +171,11 @@ final class WooFaq {
 		$installed = get_option( 'woo_faq_installed' );
 		if ( ! $installed ) {
 			update_option( 'woo_faq_installed', time() );
+			if ( false === get_option( 'product_faq_position', false ) ) {
+				update_option( 'product_faq_position', 'product_tab' );
+			}
+			update_option( 'woo_faq_v162_migrated', '1', false );
+			update_option( 'woo_faq_v170_migrated', '1', false );
 		}
 
 		update_option( 'woo_faq_version', WOO_FAQ_VERSION );
