@@ -388,7 +388,7 @@ class FaqHtml {
 		$faq_question_style = ( '' !== $faq_question_color ? 'color:' . $faq_question_color . ';' : '' ) . ( '' !== $faq_question_font_size ? 'font-size:' . $faq_question_font_size . ';' : '' );
 		$faq_ans_style      = ( '' !== $faq_ans_color ? 'color:' . $faq_ans_color . ';' : '' ) . ( '' !== $faq_ans_font_size ? 'font-size:' . $faq_ans_font_size . ';' : '' );
 		?>
-		<div class="woo-faq-container" data-faq-source="<?php echo esc_attr( $source ); ?>">
+		<div class="woo-faq-container" data-faq-source="<?php echo esc_attr( $source ); ?>" data-product-id="<?php echo esc_attr( (string) $product_id ); ?>">
 			<h2 class="woo-faq-heading" style="<?php echo esc_attr( $faq_heading_style ); ?>">
 				<span>
 					<?php
