@@ -6,7 +6,7 @@ Tested up to: 7.1
 WC requires at least: 5.0
 WC tested up to: 11.1.0
 Requires PHP: 7.3
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -123,6 +123,10 @@ Yes! Go to **Product FAQ ➔ Settings ➔ 💾 Backup & Tools** to export your d
 
 == Changelog ==
 
+= 1.7.1 =
+* **Fixed**: Added built-in Free-Tier-friendly AI model preferences (`gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3.5-flash-lite`, plus Anthropic & OpenAI models) and automatic multi-model fallback retry on `429` / `503` responses so Google AI Studio Free Tier keys work immediately without needing the optional WordPress AI experiments plugin.
+* **Improved**: Added `data-product-id` attribute to `.woo-faq-container` for accurate product context tracking across shortcodes and Gutenberg blocks.
+
 = 1.7.0 =
 * **New**: Unlocked **Unlimited Single-Product FAQs** in the Free edition—add as many manual or template FAQs per WooCommerce product as needed with zero per-product cap.
 * **New**: Expanded Free **Spec-Aware AI FAQ Generator** capacity to **up to 10 FAQs per batch** (`1`, `2`, `3`, `5`, or `10` FAQs) and increased Free **Bulk Category/Tag FAQ** capacity to **3 groups** (up to **5 FAQs per group**).
@@ -223,6 +227,9 @@ Yes! Go to **Product FAQ ➔ Settings ➔ 💾 Backup & Tools** to export your d
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.7.1 =
+Fixes Google AI Studio Free-Tier Gemini API keys (`429` quota/model fallback) when using WordPress Settings -> Connectors without the optional AI experiments plugin.
 
 = 1.7.0 =
 Major Free Upgrade: Unlocks Unlimited Single-Product FAQs, up to 10 Spec-Aware AI FAQs per batch, 3 Bulk Category/Tag FAQ groups, theme-safe Bootstrap/Elementor CSS isolation, and faster conditional asset loading!

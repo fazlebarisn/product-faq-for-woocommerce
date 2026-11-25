@@ -12,6 +12,38 @@ class AiEngine {
 	}
 
 	/**
+	 * Return ordered preferred text-generation models across Anthropic, Google Gemini (Free-Tier friendly Flash models),
+	 * and OpenAI so WordPress Core AI Client never defaults to paid-only models like `gemini-4-argon` (`limit: 0` on Free Tier)
+	 * when the standalone WordPress AI experiments plugin is inactive.
+	 *
+	 * @since 1.7.0
+	 * @return array<int, array{0:string, 1:string}>
+	 */
+	public static function getPreferredTextModels() {
+		if ( function_exists( 'WordPress\\AI\\get_preferred_models_for_text_generation' ) ) {
+			$wp_models = (array) \WordPress\AI\get_preferred_models_for_text_generation();
+			if ( ! empty( $wp_models ) ) {
+				return $wp_models;
+			}
+		}
+
+		$default_models = [
+			[ 'anthropic', 'claude-sonnet-5' ],
+			[ 'anthropic', 'claude-3-5-haiku-latest' ],
+			[ 'google', 'gemini-3.6-flash' ],
+			[ 'google', 'gemini-3.5-flash' ],
+			[ 'google', 'gemini-3.5-flash-lite' ],
+			[ 'google', 'gemini-3.1-flash-lite' ],
+			[ 'google', 'gemini-3-flash-preview' ],
+			[ 'openai', 'gpt-5.6-luna' ],
+			[ 'openai', 'gpt-5.4-mini' ],
+			[ 'openai', 'gpt-4o-mini' ],
+		];
+
+		return (array) apply_filters( 'woo_faq_preferred_ai_models', $default_models );
+	}
+
+	/**
 	 * Check if WordPress native AI Client (wp_ai_client_prompt) is available and ready for text generation.
 	 *
 	 * @return bool
@@ -23,13 +55,16 @@ class AiEngine {
 
 		try {
 			$builder = wp_ai_client_prompt( 'Test' );
-			if ( function_exists( 'WordPress\\AI\\get_preferred_models_for_text_generation' ) ) {
-				$models = \WordPress\AI\get_preferred_models_for_text_generation();
-				if ( ! empty( $models ) ) {
-					$builder = $builder->using_model_preference( ...$models );
-				}
+			$models  = self::getPreferredTextModels();
+			if ( ! empty( $models ) ) {
+				$builder = $builder->using_model_preference( ...$models );
 			}
-			return (bool) $builder->is_supported_for_text_generation();
+			if ( $builder->is_supported_for_text_generation() ) {
+				return true;
+			}
+
+			// Fallback check without model constraint in case a custom/new provider is connected.
+			return (bool) wp_ai_client_prompt( 'Test' )->is_supported_for_text_generation();
 		} catch ( \Throwable $e ) {
 			return false;
 		}
@@ -125,7 +160,8 @@ class AiEngine {
 	}
 
 	/**
-	 * Generate text using WordPress Core AI Client (wp_ai_client_prompt).
+	 * Generate text using WordPress Core AI Client (wp_ai_client_prompt) with Free-Tier-safe model preferences
+	 * and automatic fallback retry on transient 429 (quota/tier) or 503 (high-demand) errors.
 	 *
 	 * @param string $prompt              User prompt content.
 	 * @param string $system_instructions Optional system instruction.
@@ -140,33 +176,79 @@ class AiEngine {
 			);
 		}
 
-		try {
-			$builder = wp_ai_client_prompt( $prompt );
+		$preferred_models = self::getPreferredTextModels();
 
-			if ( function_exists( 'WordPress\\AI\\get_preferred_models_for_text_generation' ) ) {
-				$models = \WordPress\AI\get_preferred_models_for_text_generation();
-				if ( ! empty( $models ) ) {
-					$builder = $builder->using_model_preference( ...$models );
+		// Build sequential attempt queues: full preferred list first, then remaining fallback slices if a model hits 429/503/404.
+		$attempt_queues = [];
+		if ( ! empty( $preferred_models ) ) {
+			$attempt_queues[] = $preferred_models;
+			$count_models     = count( $preferred_models );
+			for ( $i = 1; $i < $count_models; $i++ ) {
+				$attempt_queues[] = array_slice( $preferred_models, $i );
+			}
+		}
+		$attempt_queues[] = []; // Final fallback using provider default if custom provider is active.
+
+		$last_error = null;
+		$attempts   = 0;
+
+		foreach ( $attempt_queues as $queue ) {
+			try {
+				$builder = wp_ai_client_prompt( $prompt );
+
+				if ( ! empty( $queue ) ) {
+					$builder = $builder->using_model_preference( ...$queue );
+				}
+
+				if ( ! empty( $system_instructions ) ) {
+					$builder = $builder->using_system_instruction( $system_instructions );
+				}
+
+				$builder = $builder->using_temperature( (float) $temperature );
+
+				if ( ! $builder->is_supported_for_text_generation() ) {
+					continue;
+				}
+
+				++$attempts;
+				$result = $builder->generate_text();
+
+				if ( ! is_wp_error( $result ) ) {
+					return $result;
+				}
+
+				$last_error = $result;
+				$err_msg    = strtolower( $result->get_error_message() );
+
+				// Retry next preferred model on rate-limit/free-tier quota (429), high-demand (503), or retired model (404).
+				$is_retryable = (
+					false !== strpos( $err_msg, '429' ) ||
+					false !== strpos( $err_msg, 'quota' ) ||
+					false !== strpos( $err_msg, '503' ) ||
+					false !== strpos( $err_msg, 'high demand' ) ||
+					false !== strpos( $err_msg, '404' ) ||
+					false !== strpos( $err_msg, 'not found' )
+				);
+
+				if ( ! $is_retryable || $attempts >= 4 ) {
+					return $result;
+				}
+			} catch ( \Throwable $e ) {
+				$last_error = new \WP_Error( 'wp_ai_exception', $e->getMessage() );
+				if ( $attempts >= 4 ) {
+					return $last_error;
 				}
 			}
-
-			if ( ! empty( $system_instructions ) ) {
-				$builder = $builder->using_system_instruction( $system_instructions );
-			}
-
-			$builder = $builder->using_temperature( (float) $temperature );
-
-			if ( ! $builder->is_supported_for_text_generation() ) {
-				return new \WP_Error(
-					'wp_ai_not_configured',
-					__( 'No connected AI provider found in WordPress Settings -> Connectors.', 'product-faq-for-woocommerce' )
-				);
-			}
-
-			return $builder->generate_text();
-		} catch ( \Throwable $e ) {
-			return new \WP_Error( 'wp_ai_exception', $e->getMessage() );
 		}
+
+		if ( is_wp_error( $last_error ) ) {
+			return $last_error;
+		}
+
+		return new \WP_Error(
+			'wp_ai_not_configured',
+			__( 'No connected AI provider found in WordPress Settings -> Connectors.', 'product-faq-for-woocommerce' )
+		);
 	}
 
 	/**
